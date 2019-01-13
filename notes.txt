@@ -1,0 +1,20 @@
+Included files:
+main
+clock
+pac_gripper
+pac_arm
+pac_state
+drv_uart1
+drv_uart2
+
+Omitted files:
+pac_uart1
+pac_temp
+pac_pindefs
+pwm
+qei_enc
+
+SendCommand() in perching_arm.h can only send a 16-bit integer; three commands defined for the Astrobee require a 32-bit signal. However, on the PAC, the uart2_write_register() function can sent in32_t values. 
+What is the best way to resolve this discrepancy?
+
+Is pac_pindefs required for any of the files?
