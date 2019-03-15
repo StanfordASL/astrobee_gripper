@@ -1,5 +1,3 @@
-#include <p33Exxxx.h>
-
 #include "pac_state.h"
 
 void reset_board() {

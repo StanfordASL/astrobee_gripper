@@ -65,12 +65,12 @@ int main(int argc, char** argv) {
     }
     else if(loop_count == 500) {
       for(i=0; i<10; i++) {
-        arm_motor_state.fedb_packet[fdbIdx++] = rxBuffer[i+9];
+        arm_motor_state.fedb_packet[fdbIdx++] = 0; 
       }
     }
     else if(loop_count == 750) {
       for(i=0; i<10; i++) {
-        arm_motor_state.fedb_packet[fdbIdx++] = rxBuffer[i+9];
+        arm_motor_state.fedb_packet[fdbIdx++] = 0; 
       }
     } 
     else if(loop_count == 1000) {
@@ -79,10 +79,10 @@ int main(int argc, char** argv) {
         int8_t STATUS_H = rxBuffer[9];
         int8_t STATUS_L = rxBuffer[10];
 
-        grip_motor_data.adhesive_engage         = STATUS_L & 1;
-        grip_motor_data.wrist_lock              = STATUS_L & 2;
-        grip_motor_data.automatic_mode_enable   = STATUS_L & 8;
-        grip_motor_data.experiment_in_progress  = (STATUS_L >> 7) & 1;
+        grip_motor_state.adhesive_engage         = STATUS_L & 1;
+        grip_motor_state.wrist_lock              = STATUS_L & 2;
+        grip_motor_state.automatic_mode_enable   = STATUS_L & 8;
+        grip_motor_state.experiment_in_progress  = STATUS_H & 1;
       }
     } 
     else if(loop_count == 1250) {
@@ -98,7 +98,6 @@ int main(int argc, char** argv) {
     timer_state.flag = false;
   }
 
-  uart1_delete();
   fatal();
   
   return (EXIT_SUCCESS);
