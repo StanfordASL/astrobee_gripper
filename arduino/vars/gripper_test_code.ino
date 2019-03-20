@@ -9,7 +9,6 @@ unsigned char HighByte(unsigned short v) {
 // Send packet using UART
 void SendPacket(unsigned char* packet, size_t len) {
   Serial1.write(packet, len);
-  Serial.println("Something sent!");
 }
 
 unsigned char ConstructErrorPacket(char ERR_NUMBER) {
@@ -68,6 +67,56 @@ void SendPingPacket() {
 
 void SendAcknowledgePacket() {
   unsigned char ack_packet[packet_len];
+}
+
+void SendStatusPacket() {
+  size_t status_packet_len = 12;
+  unsigned char status_packet[status_packet_len];
+  status_packet[0] = 0xff;
+  status_packet[1] = 0xff;
+  status_packet[2] = 0xfd;
+  status_packet[3] = 0x00;
+  status_packet[4] = TARGET_GRIPPER;
+  status_packet[5] = LowByte(status_packet_len - fixed_packet_len);
+  status_packet[6] = HighByte(status_packet_len - fixed_packet_len);
+  status_packet[7] = INSTR_STATUS;
+
+  // STATUS_H = [- - - - AUTO - WRIST ADH] 
+  unsigned char STATUS_H = (automatic_mode_enable<<3) | (wrist_lock<<1) | (adhesive_engage);
+  status_packet[8] = STATUS_H;
+
+  // STATUS_L = [TEMP -   -   -   -   -   - EXP]
+  unsigned char STATUS_L = (overtemperature_flag<<7) | experiment_in_progress;
+  status_packet[9] = STATUS_L; 
+
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, status_packet, status_packet_len - 2);
+  status_packet[10] = LowByte(crc_value);
+  status_packet[11] = HighByte(crc_value);
+
+  SendPacket(status_packet, status_packet_len);
+}  
+
+void SendRecordPacket() {
+  size_t record_packet_len = 45; 
+  unsigned char record_packet[record_packet_len];
+  record_packet[0] = 0xff;
+  record_packet[1] = 0xff;
+  record_packet[2] = 0xfd;
+  record_packet[3] = 0x00;
+  record_packet[4] = TARGET_GRIPPER;
+  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
+  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
+  record_packet[7] = INSTR_STATUS;
+
+  // TODO(acauligi)
+
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
+  record_packet[43] = LowByte(crc_value);
+  record_packet[44] = HighByte(crc_value);
+
+  SendPacket(record_packet, record_packet_len);
 }
 
 // Reset state of received_packet
@@ -236,6 +285,7 @@ void UpdateGripperState() {
   wrist_lock;
   automatic_mode_enable;
   experiment_in_progress;
+  overtemperature_flag; 
 }
 
 void setup() {
@@ -247,6 +297,7 @@ void setup() {
   wrist_lock = false;
   automatic_mode_enable = false;
   experiment_in_progress = false;
+  overtemperature_flag = false;
 
   // Global variables
   new_data = false;
@@ -273,9 +324,4 @@ void loop() {
   UpdateGripperState();
   IncomingData();
   ProcessData();
-  // char rc = 'n';
-  // if (Serial1.available() > 0) {
-  // rc = Serial1.read();
-  // Serial.println(rc);
-  // }
 }

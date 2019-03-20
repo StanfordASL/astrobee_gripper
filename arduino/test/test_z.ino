@@ -10,13 +10,14 @@ void setup() {
 
 void loop() {
   ResetState();
-  SendPingPacket();
+  // SendPingPacket();
   // SendReadPacket();
   // SendWritePacket();
+  SendChecksumPacket();
   Serial.println("The packet has been sent!");
   IncomingData();
   if (new_data) {
-    bool packet_valid = VerifyPingRxPacket();
+    bool packet_valid = VerifyChecksumRxPacket();
     if (packet_valid) {
       Serial.println("Test passed!");
     } else {

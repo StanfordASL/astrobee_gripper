@@ -47,6 +47,7 @@ bool adhesive_engage;
 bool wrist_lock;
 bool automatic_mode_enable;
 bool experiment_in_progress;
+bool overtemperature_flag;
 
 // Global variables
 boolean new_data; 
