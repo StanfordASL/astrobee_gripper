@@ -1,44 +1,41 @@
-void LowByte(char v) {
+unsigned char LowByte(unsigned short v) {
   return ((unsigned char) (v));
 }
 
-void HighByte(char v) {
+unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
-// Send packet using UART 
-void SendPacket(char packet, size_t len) {
-  for (size_t k = 0; k < len; k++) {
-    Serial1.write(packet[k]);
-  }
-  // TODO(acauligi): Does the following work too?
-  // Serial.write(received_packet,len);
+// Send packet using UART
+void SendPacket(unsigned char* packet, size_t len) {
+  Serial1.write(packet, len);
+  Serial.println("Something sent!");
 }
 
 unsigned char ConstructErrorPacket(char ERR_NUMBER) {
-  unsigned char ERR_BYTE = (0x01<<7) | ERR_NUMBER;
+  unsigned char ERR_BYTE = (0x01 << 7) | ERR_NUMBER;
   return ERR_BYTE;
 }
 
 void SendErrorPacket(char ERR_NUMBER) {
-  unsigned char ERR_BYTE = ConstructErrorPacket(ERR_NUMBER); 
-  
+  unsigned char ERR_BYTE = ConstructErrorPacket(ERR_NUMBER);
+
   size_t err_packet_len = 11;
   unsigned char err_packet[err_packet_len];
   err_packet[0] = 0xff;
   err_packet[1] = 0xff;
   err_packet[2] = 0xfd;
   err_packet[3] = 0x00;
-  err_packet[4] = TARGET_GRIPPER; 
-  err_packet[5] = LowByte(err_packet_len - 7);
-  err_packet[6] = HighByte(err_packet_len - 7);
+  err_packet[4] = TARGET_GRIPPER;
+  err_packet[5] = LowByte(err_packet_len - fixed_packet_len);
+  err_packet[6] = HighByte(err_packet_len - fixed_packet_len);
   err_packet[7] = INSTR_STATUS;
   err_packet[8] = ERR_BYTE;
-        
+
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, err_packet, err_packet_len - 2);
-  err_packet[9] = LowByte(crc_value); 
-  err_packet[10] = HighByte(crc_value); 
+  err_packet[9] = LowByte(crc_value);
+  err_packet[10] = HighByte(crc_value);
 
   SendPacket(err_packet, err_packet_len);
 }
@@ -50,9 +47,9 @@ void SendPingPacket() {
   ping_packet[1] = 0xff;
   ping_packet[2] = 0xfd;
   ping_packet[3] = 0x00;
-  ping_packet[4] = TARGET_GRIPPER; 
-  ping_packet[5] = LowByte(ping_packet_len - 7);
-  ping_packet[6] = HighByte(ping_packet_len - 7);
+  ping_packet[4] = TARGET_GRIPPER;
+  ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
+  ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
   ping_packet[7] = INSTR_STATUS;
   ping_packet[8] = 0x00;
 
@@ -60,13 +57,17 @@ void SendPingPacket() {
   ping_packet[9]  = 0x01;
   ping_packet[10] = 0x02;
   ping_packet[11] = 0x03;
-        
+
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, ping_packet, ping_packet_len - 2);
-  ping_packet[12] = LowByte(crc_value); 
-  ping_packet[13] = HighByte(crc_value); 
+  ping_packet[12] = LowByte(crc_value);
+  ping_packet[13] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
+}
+
+void SendAcknowledgePacket() {
+  unsigned char ack_packet[packet_len];
 }
 
 // Reset state of received_packet
@@ -78,7 +79,7 @@ void ResetState() {
 
   packet_len = fixed_packet_len;
   ndx = 5;
-  send_acknowledge_packet = false; 
+  send_acknowledge_packet = false;
 }
 
 void IncomingData() {
@@ -106,7 +107,7 @@ void IncomingData() {
         packet_len += len;
 
         if (packet_len > num_chars) {
-          // Not enough space allocated in received_packet to read packet 
+          // Not enough space allocated in received_packet to read packet
           Serial.print("Discarding packet as length exceeds maximum length of ");
           Serial.println(num_chars);
           ResetState();
@@ -114,19 +115,19 @@ void IncomingData() {
       } else if (ndx == 7 && received_packet[7] == INSTR_WRITE) {
         send_acknowledge_packet = true;
       } else if (ndx == packet_len - 1) {
-        unsigned short packet_checksum = ((received_packet[packet_len - 1] << 8) | (received_packet[packet_len - 2]));
+        unsigned short packet_checksum = (((received_packet[packet_len - 1]) << 8) | ((received_packet[packet_len - 2])));        
         unsigned short crc_value = 0;
         crc_value = update_crc(crc_value, received_packet, packet_len - 2);
+
         if (crc_value == packet_checksum) {
           Serial.println("Checksum matches!");
         } else {
           Serial.println("Checksum does not match!");
-          SendErrorPacket(ERR_CRC); 
+          SendErrorPacket(ERR_CRC);
           ResetState();
           break;
-        
+        }
       }
-
       ndx++;
       if (ndx >= packet_len) {
         new_data = true;
@@ -149,11 +150,11 @@ void ProcessData() {
 
     char instr = received_packet[7];
     char addr = ((received_packet[9] << 8) | (received_packet[8]));
+    Serial.println(instr, HEX);
 
     switch (instr) {
       case INSTR_PING:
-          SendPingPacket();
-        }
+        SendPingPacket();
 
       case INSTR_READ:
         switch (addr) {
@@ -228,7 +229,7 @@ void ProcessData() {
     ResetState();
   }
 }
-  
+
 void UpdateGripperState() {
   // Read four status bytes
   adhesive_engage;
@@ -247,7 +248,7 @@ void setup() {
   automatic_mode_enable = false;
   experiment_in_progress = false;
 
-  // Global variables 
+  // Global variables
   new_data = false;
   packet_len = fixed_packet_len;
   ndx = 5;
@@ -272,4 +273,9 @@ void loop() {
   UpdateGripperState();
   IncomingData();
   ProcessData();
+  // char rc = 'n';
+  // if (Serial1.available() > 0) {
+  // rc = Serial1.read();
+  // Serial.println(rc);
+  // }
 }

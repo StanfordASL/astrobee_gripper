@@ -1,17 +1,14 @@
-size_t ping_tx_packet_len = 11;
-unsigned char ping_tx_packet[ping_tx_packet_len];
+const size_t ping_tx_packet_len = 11;
+const size_t ping_rx_packet_len = 14;
 
-size_t ping_rx_packet_len = 14;
-unsigned char ping_rx_packet[ping_rx_packet_len];
-
-void ConstructRxPacket() {
+void ConstructPingRxPacket(unsigned char* ping_rx_packet) {
   ping_rx_packet[0] = 0xff;
   ping_rx_packet[1] = 0xff;
   ping_rx_packet[2] = 0xfd;
   ping_rx_packet[3] = 0x00;
   ping_rx_packet[4] = TARGET_GRIPPER; 
-  ping_rx_packet[5] = LowByte(ping_rx_packet_len - 7);
-  ping_rx_packet[6] = HighByte(ping_rx_packet_len - 7);
+  ping_rx_packet[5] = LowByte(ping_rx_packet_len - fixed_packet_len);
+  ping_rx_packet[6] = HighByte(ping_rx_packet_len - fixed_packet_len);
   ping_rx_packet[7] = INSTR_STATUS;
   ping_rx_packet[8] = 0x00;
 
@@ -27,13 +24,14 @@ void ConstructRxPacket() {
 }
 
 void SendPingPacket() {
+  unsigned char ping_tx_packet[ping_tx_packet_len];
   ping_tx_packet[0] = 0xff;
   ping_tx_packet[1] = 0xff;
   ping_tx_packet[2] = 0xfd;
   ping_tx_packet[3] = 0x00;
   ping_tx_packet[4] = TARGET_GRIPPER; 
-  ping_tx_packet[5] = LowByte(ping_tx_packet_len - 7);
-  ping_tx_packet[6] = HighByte(ping_tx_packet_len - 7);
+  ping_tx_packet[5] = LowByte(ping_tx_packet_len - fixed_packet_len);
+  ping_tx_packet[6] = HighByte(ping_tx_packet_len - fixed_packet_len);
   ping_tx_packet[7] = INSTR_PING;
   ping_tx_packet[8] = 0x01;
         
@@ -45,9 +43,12 @@ void SendPingPacket() {
   SendPacket(ping_tx_packet, ping_tx_packet_len);
 }
 
-bool VerifyRxPacket() {
+bool VerifyPingRxPacket() {
   bool passed = true;
-  if (sizeof(received_packet) != ping_rx_packet_len) {
+  unsigned char ping_rx_packet[ping_rx_packet_len];
+  ConstructPingRxPacket(ping_rx_packet);
+  
+  if (packet_len != ping_rx_packet_len) {
     passed = false;
   } else {
     for (size_t k = 0; k < ping_rx_packet_len; k++) {
@@ -57,27 +58,4 @@ bool VerifyRxPacket() {
     }
   }
   return passed;
-}
-
-void setup() {
-  Serial1.begin(115200);
-  Serial.begin(115200);
-
-  // Global variables 
-  new_data = false;
-  packet_len = fixed_packet_len;
-  ndx = 5;
-}
-
-void loop() {
-  SendPingPacket();
-  IncomingData();
-  if (new_data) {
-    bool packet_valid = VerifyRxPacket();
-    if (packet_valid) {
-      Serial.println("Ping test passed!");
-    } else {
-      Serial.println("Ping test failed!");
-    }
-  }
 }

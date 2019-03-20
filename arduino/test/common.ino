@@ -1,17 +1,28 @@
-void LowByte(char v) {
+unsigned char LowByte(unsigned short v) {
   return ((unsigned char) (v));
 }
 
-void HighByte(char v) {
+unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
-void SendPacket(char packet, size_t len) {
-  for (size_t k = 0; k < len; k++) {
-    Serial1.write(packet[k]);
-  }
+// Reset state of received_packet
+void ResetState() {
+  new_data = false;
+
+  memset(received_packet, 0, sizeof(received_packet));
+  memset(hdr_buffer, 0, sizeof(hdr_buffer));
+
+  packet_len = fixed_packet_len;
+  ndx = 5;
+}
+
+void SendPacket(unsigned char* packet, size_t len) {
+//  for (size_t k = 0; k < len; k++) {
+//    Serial1.write(packet[k]);
+//  }
   // TODO(acauligi): Does the following work too?
-  // Serial.write(received_packet,len);
+   Serial1.write(packet,len);
 }
 
 void IncomingData() {
