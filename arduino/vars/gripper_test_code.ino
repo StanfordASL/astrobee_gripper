@@ -97,27 +97,101 @@ void SendStatusPacket() {
   SendPacket(status_packet, status_packet_len);
 }  
 
-void SendRecordPacket() {
-  size_t record_packet_len = 45; 
-  unsigned char record_packet[record_packet_len];
-  record_packet[0] = 0xff;
-  record_packet[1] = 0xff;
-  record_packet[2] = 0xfd;
-  record_packet[3] = 0x00;
-  record_packet[4] = TARGET_GRIPPER;
-  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
-  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
-  record_packet[7] = INSTR_STATUS;
-
-  // TODO(acauligi)
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
-  record_packet[43] = LowByte(crc_value);
-  record_packet[44] = HighByte(crc_value);
-
-  SendPacket(record_packet, record_packet_len);
-}
+// void SendRecordPacket() {
+//   size_t record_packet_len = 45; 
+//   unsigned char record_packet[record_packet_len];
+//   record_packet[0] = 0xff;
+//   record_packet[1] = 0xff;
+//   record_packet[2] = 0xfd;
+//   record_packet[3] = 0x00;
+//   record_packet[4] = TARGET_GRIPPER;
+//   record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
+//   record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
+//   record_packet[7] = INSTR_STATUS;
+//   size_t txIdx = 8;
+// 
+//   // TIME: running 16-bit unsigned counter since Teensy power-on
+//   record_packet[txIdx+0] =; 
+//   record_packet[txIdx+1] =;
+//   record_packet[txIdx+2] =;
+//   record_packet[txIdx+3] =;
+//   record_packet[txIdx+4] =;
+// 
+//   record_packet[txIdx+5] = ',';
+// 
+//   if (adhesive_engage) {
+//     record_packet[txIdx+6] ='E';
+//   } else {
+//     record_packet[txIdx+6] ='D';
+//   }
+// 
+//   if (wrist_lock) { 
+//     record_packet[txIdx+7] = 'L';
+//   } else {
+//     record_packet[txIdx+7] = 'U';
+//   }
+// 
+//   if (automatic_mode_enable) { 
+//     record_packet[txIdx+8] = 'A';
+//   } else {
+//     record_packet[txIdx+8] = '*';
+//   }
+// 
+//   record_packet[txIdx+9] = ',';
+// 
+//   // SRV_L1_CURR
+//   record_packet[txIdx+10] =
+//   record_packet[txIdx+11] =
+//   record_packet[txIdx+12] =
+//   record_packet[txIdx+13] =
+// 
+//   record_packet[txIdx+14] = ',';
+// 
+//   // SRV_L2_CURR
+//   record_packet[txIdx+15] = ;
+//   record_packet[txIdx+16] = ;
+//   record_packet[txIdx+17] = ;
+//   record_packet[txIdx+18] = ;
+// 
+//   record_packet[txIdx+19] = ',';
+// 
+//   // SRV_R_CURR 
+//   record_packet[txIdx+20] = ;
+//   record_packet[txIdx+21] = ;
+//   record_packet[txIdx+22] = ;
+//   record_packet[txIdx+23] = ;
+// 
+//   record_packet[txIdx+24] = ',';
+// 
+//   // SRV_W_CURR 
+//   record_packet[txIdx+25] = ;
+//   record_packet[txIdx+26] = ;
+//   record_packet[txIdx+27] = ;
+//   record_packet[txIdx+28] = ;
+// 
+//   record_packet[txIdx+29] = ',';
+// 
+//   // TOF
+//   record_packet[txIdx+30] = ;
+//   record_packet[txIdx+31] = ;
+//   record_packet[txIdx+32] = ;
+//   
+//   record_packet[txIdx+33] = ',';
+//   
+//   
+//   if (overtemperature_flag) {
+//     record_packet[txIdx+34] = '*';
+//   } else {
+//     record_packet[txIdx+34] = '-';
+//   }
+// 
+//   unsigned short crc_value = 0;
+//   crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
+//   record_packet[43] = LowByte(crc_value);
+//   record_packet[44] = HighByte(crc_value);
+// 
+//   SendPacket(record_packet, record_packet_len);
+// }
 
 // Reset state of received_packet
 void ResetState() {
