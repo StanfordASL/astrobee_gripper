@@ -360,6 +360,12 @@ void UpdateGripperState() {
   automatic_mode_enable;
   experiment_in_progress;
   overtemperature_flag; 
+
+  float current_mA;
+  current_mA = ina219_A.getCurrent_mA();
+  current_mA = ina219_B.getCurrent_mA();
+  current_mA = ina219_C.getCurrent_mA();
+  current_mA = ina219_D.getCurrent_mA();
 }
 
 void setup() {
@@ -392,6 +398,29 @@ void setup() {
   digitalWrite(21, LOW);
   digitalWrite(22, LOW);
   digitalWrite(23, LOW);
+
+  // Initialize the INA219.
+  // By default the initialization will use the largest range (32V, 2A).  However
+  // you can call a setCalibration function to change this range (see comments).
+  ina219_A.begin();
+  ina219_B.begin();
+  ina219_C.begin();
+  ina219_D.begin();
+  // To use a slightly lower 32V, 1A range (higher precision on amps):
+  ina219_A.setCalibration_32V_1A();
+  ina219_B.setCalibration_32V_1A();
+  ina219_C.setCalibration_32V_1A();
+  ina219_D.setCalibration_32V_1A();
+  // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
+  //ina219.setCalibration_16V_400mA();
+
+  //initializing the PWMServoDriver
+  pwm.begin();
+  pwm.setPWMFreq(60);
+  delay(10);
+
+  //Initialize the wrist lock servo
+  wrist_lock_servo.attach(20);
 }
 
 void loop() {

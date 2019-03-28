@@ -1,3 +1,10 @@
+//Include all necessary libraries, wire, INA219, ServoDriver, Servo and VL6180X
+#include <Wire.h>
+#include <Servo.h>
+#include <Adafruit_INA219.h>
+#include <Adafruit_PWMServoDriver.h>
+#include "Adafruit_VL6180X.h"
+
 // Command addresses
 const char ADDRESS_TOGGLE_AUTO = 0x33;
 const char ADDRESS_OPEN = 0x34;
@@ -61,6 +68,22 @@ const int num_chars = 30;
 const size_t hdr_size = 5;
 unsigned char received_packet[num_chars];
 unsigned char hdr_buffer[hdr_size];
+
+// Assigning the PWMServoDriver I2C address
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
+
+// Declaring wrist lock servo
+Servo wrist_lock_servo;
+const int wrist_delay = 20;    //setting wrist lock delay timer
+
+//Creating VL6180X distance sensor object
+Adafruit_VL6180X vl = Adafruit_VL6180X();
+
+//Assigning the INA219 current sensor I2C address
+Adafruit_INA219 ina219_A;
+Adafruit_INA219 ina219_B(0x41);
+Adafruit_INA219 ina219_C(0x44);
+Adafruit_INA219 ina219_D(0x45);
 
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
   unsigned short i, j;
