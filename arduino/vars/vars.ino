@@ -29,7 +29,8 @@ const char EXPERIMENT = 0x7B;
 // Protocol target constants
 const char TARGET_PROXIMAL      = 0x00;
 const char TARGET_DISTAL        = 0x01;
-const char TARGET_GRIPPER       = 0x04;
+const char HOST_ARM_BASIC_CMD_GECKO_GRIPPER = 9;
+const char TARGET_GRIPPER       =  HOST_ARM_BASIC_CMD_GECKO_GRIPPER;
 
 // Instructions
 const char INSTR_PING           = 0x01;
