@@ -1,14 +1,24 @@
 void OpenGripper() {
-  digitalWrite(4, HIGH);
-  digitalWrite(5, LOW);
+  digitalWrite(4, LOW);
+  digitalWrite(5, HIGH);
+  digitalWrite(6, LOW);
+  // Engage();
+  // Lock();
 }
 
 void CloseGripper() {
-  digitalWrite(4, LOW);
-  digitalWrite(5, HIGH);
+  digitalWrite(4, HIGH);
+  digitalWrite(5, LOW);
+  digitalWrite(6, LOW);
+  // Disengage();
+  // Unlock();
 }
 
 void ToggleAuto() {
+  digitalWrite(21, LOW);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+
   if (toggle ==  1) {
     digitalWrite(21, HIGH);
     toggle = 2;

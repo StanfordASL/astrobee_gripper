@@ -62,7 +62,7 @@ boolean new_data;
 size_t packet_len; 
 size_t ndx;
 int toggle;
-bool send_acknowledge_packet; 
+bool send_ack_packet; 
 
 const size_t fixed_packet_len = 7; 
 const int num_chars = 30;

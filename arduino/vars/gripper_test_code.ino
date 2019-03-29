@@ -50,7 +50,7 @@ void SendPingPacket() {
   ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
   ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
   ping_packet[7] = INSTR_STATUS;
-  ping_packet[8] = 0x00;
+  ping_packet[8] = 0x00;    // no error byte
 
   // dummy status packet parameters
   ping_packet[9]  = 0x01;
@@ -202,7 +202,7 @@ void ResetState() {
 
   packet_len = fixed_packet_len;
   ndx = 5;
-  send_acknowledge_packet = false;
+  send_ack_packet = false;
 }
 
 void IncomingData() {
@@ -236,7 +236,7 @@ void IncomingData() {
           ResetState();
         }
       } else if (ndx == 7 && received_packet[7] == INSTR_WRITE) {
-        send_acknowledge_packet = true;
+        send_ack_packet = true;
       } else if (ndx == packet_len - 1) {
         unsigned short packet_checksum = (((received_packet[packet_len - 1]) << 8) | ((received_packet[packet_len - 2])));        
         unsigned short crc_value = 0;
@@ -266,9 +266,11 @@ void ProcessData() {
     // Serial.println();
     // Serial.println(millis());
 
-    if (send_acknowledge_packet) {
-      SendPacket(received_packet, packet_len);
-      send_acknowledge_packet = false;
+    if (send_ack_packet) {
+      // SendPacket(received_packet, packet_len);
+      // TODO(acauligi): send back ack packet with data in write command
+      SendPingPacket();
+      send_ack_packet = false;
     }
 
     char instr = received_packet[7];
@@ -355,11 +357,11 @@ void ProcessData() {
 
 void UpdateGripperState() {
   // Read four status bytes
-  adhesive_engage;
-  wrist_lock;
-  automatic_mode_enable;
-  experiment_in_progress;
-  overtemperature_flag; 
+  // adhesive_engage;
+  // wrist_lock;
+  // automatic_mode_enable;
+  // experiment_in_progress;
+  // overtemperature_flag; 
 
   float current_mA;
   current_mA = ina219_A.getCurrent_mA();
@@ -384,7 +386,7 @@ void setup() {
   packet_len = fixed_packet_len;
   ndx = 5;
   toggle = 1;
-  send_acknowledge_packet = false;
+  send_ack_packet = false;
 
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
@@ -395,9 +397,9 @@ void setup() {
   digitalWrite(4, LOW);
   digitalWrite(5, LOW);
   digitalWrite(6, HIGH);
-  digitalWrite(21, LOW);
-  digitalWrite(22, LOW);
-  digitalWrite(23, LOW);
+  digitalWrite(21, HIGH);
+  digitalWrite(22, HIGH);
+  digitalWrite(23, HIGH);
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
