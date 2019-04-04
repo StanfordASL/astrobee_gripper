@@ -4,6 +4,8 @@
 #include <Adafruit_INA219.h>
 #include <Adafruit_PWMServoDriver.h>
 #include "Adafruit_VL6180X.h"
+#include <SPI.h>
+#include <SD.h>
 
 // Command addresses
 const char ADDRESS_TOGGLE_AUTO = 0x33;
@@ -69,6 +71,7 @@ const int num_chars = 30;
 const size_t hdr_size = 5;
 unsigned char received_packet[num_chars];
 unsigned char hdr_buffer[hdr_size];
+const int LED_HIGH = 80;
 
 // Assigning the PWMServoDriver I2C address
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
@@ -76,6 +79,14 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
 // Declaring wrist lock servo
 Servo wrist_lock_servo;
 const int wrist_delay = 20;    //setting wrist lock delay timer
+
+// File object for SD cart write
+File my_file;
+String fn = "card_testing.txt";
+float current_mA_A;
+float current_mA_B;
+float current_mA_C;
+float current_mA_D;
 
 //Creating VL6180X distance sensor object
 Adafruit_VL6180X vl = Adafruit_VL6180X();

@@ -363,11 +363,72 @@ void UpdateGripperState() {
   // experiment_in_progress;
   // overtemperature_flag; 
 
-  float current_mA;
-  current_mA = ina219_A.getCurrent_mA();
-  current_mA = ina219_B.getCurrent_mA();
-  current_mA = ina219_C.getCurrent_mA();
-  current_mA = ina219_D.getCurrent_mA();
+  current_mA_A = ina219_A.getCurrent_mA();
+  current_mA_B = ina219_B.getCurrent_mA();
+  current_mA_C = ina219_C.getCurrent_mA();
+  current_mA_D = ina219_D.getCurrent_mA();
+}
+
+void WriteToCard() {
+//  my_file = SD.open("test_write.txt", FILE_WRITE);
+//  if (my_file) {
+//    my_file.println(current_mA_A);
+//    my_file.println(current_mA_B);
+//    my_file.println(current_mA_C);
+//    my_file.println(current_mA_D);
+//    my_file.close();
+//    // Serial.println("Writing to SD card");
+//  } else {
+//    // Serial.println("Not writing to SD card");
+//  }
+//    while (!Serial) {
+//    ; // wait for serial port to connect. Needed for native USB port only
+//  }
+
+
+  Serial.print("Initializing SD card...");
+
+  if (!SD.begin(10)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+  Serial.println("initialization done.");
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  my_file = SD.open("test.txt", FILE_WRITE);
+
+  // if the file opened okay, write to it:
+  if (my_file) {
+    Serial.print("Writing to test.txt...");
+     my_file.println("testing 1, 2, 3.");
+    my_file.println(current_mA_A);
+    my_file.println(current_mA_B);
+    my_file.println(current_mA_C);
+    my_file.println(current_mA_D);
+    // close the file:
+    my_file.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+  // re-open the file for reading:
+  my_file = SD.open("test.txt");
+  if (my_file) {
+    Serial.println("test.txt:");
+
+    // read from the file until there's nothing else in it:
+    while (my_file.available()) {
+      Serial.write(my_file.read());
+    }
+    // close the file:
+    my_file.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
 }
 
 void setup() {
@@ -394,12 +455,19 @@ void setup() {
   pinMode(21, OUTPUT);
   pinMode(22, OUTPUT);
   pinMode(23, OUTPUT);
-  digitalWrite(4, LOW);
-  digitalWrite(5, LOW);
-  digitalWrite(6, HIGH);
-  digitalWrite(21, HIGH);
-  digitalWrite(22, HIGH);
-  digitalWrite(23, HIGH);
+//  digitalWrite(4, LOW);
+//  digitalWrite(5, LOW);
+//  digitalWrite(6, HIGH);
+//  digitalWrite(21, LOW);
+//  digitalWrite(22, LOW);
+//  digitalWrite(23, HIGH);
+  analogWrite(4, 0);
+  analogWrite(5, 0);
+  analogWrite(6, LED_HIGH);
+  analogWrite(21, 0);
+  analogWrite(22, 0);
+  analogWrite(23, LED_HIGH);
+  
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
@@ -423,10 +491,12 @@ void setup() {
 
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
+
 }
 
 void loop() {
   UpdateGripperState();
   IncomingData();
   ProcessData();
+  WriteToCard();
 }

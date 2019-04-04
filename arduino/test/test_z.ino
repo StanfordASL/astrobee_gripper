@@ -13,16 +13,17 @@ void loop() {
   // SendPingPacket();
   // SendReadPacket();
   // SendWritePacket();
-  SendChecksumPacket();
+  // SendChecksumPacket();
+  SendWritePacket();
   Serial.println("The packet has been sent!");
-  IncomingData();
-  if (new_data) {
-    bool packet_valid = VerifyChecksumRxPacket();
-    if (packet_valid) {
-      Serial.println("Test passed!");
-    } else {
-      Serial.println("Test failed!");
-    }
-  }
+  // IncomingData();
+  // if (new_data) {
+  //   bool packet_valid = VerifyChecksumRxPacket();
+  //   if (packet_valid) {
+  //     Serial.println("Test passed!");
+  //   } else {
+  //     Serial.println("Test failed!");
+  //   }
+  // }
   delay(3000);
 }
