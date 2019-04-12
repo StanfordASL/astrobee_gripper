@@ -1,6 +1,6 @@
 const size_t open_tx_packet_len = 12;
 
-void SendWritePacket() {
+void SendOpenPacket() {
   unsigned char open_tx_packet[open_tx_packet_len];
   open_tx_packet[0] = 0xff;
   open_tx_packet[1] = 0xff;

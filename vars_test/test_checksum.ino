@@ -1,4 +1,4 @@
-const size_t checksum_tx_packet_len = 10;
+const size_t checksum_tx_packet_len = 11;
 const size_t checksum_rx_packet_len = 11;
 
 void ConstructChecksumRxPacket(unsigned char* checksum_rx_packet) {

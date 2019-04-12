@@ -11,13 +11,13 @@ void SendPacket(unsigned char* packet, size_t len) {
   Serial1.write(packet, len);
 }
 
-unsigned char ConstructErrorPacket(char ERR_NUMBER) {
+unsigned char ConstructErrorByte(char ERR_NUMBER) {
   unsigned char ERR_BYTE = (0x01 << 7) | ERR_NUMBER;
   return ERR_BYTE;
 }
 
 void SendErrorPacket(char ERR_NUMBER) {
-  unsigned char ERR_BYTE = ConstructErrorPacket(ERR_NUMBER);
+  err_state = ConstructErrorByte(ERR_NUMBER);
 
   size_t err_packet_len = 11;
   unsigned char err_packet[err_packet_len];
@@ -29,7 +29,7 @@ void SendErrorPacket(char ERR_NUMBER) {
   err_packet[5] = LowByte(err_packet_len - fixed_packet_len);
   err_packet[6] = HighByte(err_packet_len - fixed_packet_len);
   err_packet[7] = INSTR_STATUS;
-  err_packet[8] = ERR_BYTE;
+  err_packet[8] = err_state; 
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, err_packet, err_packet_len - 2);
@@ -50,7 +50,7 @@ void SendPingPacket() {
   ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
   ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
   ping_packet[7] = INSTR_STATUS;
-  ping_packet[8] = 0x00;    // no error byte
+  ping_packet[8] = err_state;
 
   // dummy status packet parameters
   ping_packet[9]  = 0x01;
@@ -70,7 +70,7 @@ void SendAcknowledgePacket() {
 }
 
 void SendStatusPacket() {
-  size_t status_packet_len = 12;
+  size_t status_packet_len = 13; 
   unsigned char status_packet[status_packet_len];
   status_packet[0] = 0xff;
   status_packet[1] = 0xff;
@@ -80,118 +80,105 @@ void SendStatusPacket() {
   status_packet[5] = LowByte(status_packet_len - fixed_packet_len);
   status_packet[6] = HighByte(status_packet_len - fixed_packet_len);
   status_packet[7] = INSTR_STATUS;
+  status_packet[8] = err_state; 
 
   // STATUS_H = [- - - - AUTO - WRIST ADH] 
   unsigned char STATUS_H = (automatic_mode_enable<<3) | (wrist_lock<<1) | (adhesive_engage);
-  status_packet[8] = STATUS_H;
+  status_packet[9] = STATUS_H;
 
   // STATUS_L = [TEMP -   -   -   -   -   - EXP]
   unsigned char STATUS_L = (overtemperature_flag<<7) | experiment_in_progress;
-  status_packet[9] = STATUS_L; 
+  status_packet[10] = STATUS_L; 
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, status_packet, status_packet_len - 2);
-  status_packet[10] = LowByte(crc_value);
-  status_packet[11] = HighByte(crc_value);
+  status_packet[11] = LowByte(crc_value);
+  status_packet[12] = HighByte(crc_value);
 
   SendPacket(status_packet, status_packet_len);
 }  
 
-// void SendRecordPacket() {
-//   size_t record_packet_len = 45; 
-//   unsigned char record_packet[record_packet_len];
-//   record_packet[0] = 0xff;
-//   record_packet[1] = 0xff;
-//   record_packet[2] = 0xfd;
-//   record_packet[3] = 0x00;
-//   record_packet[4] = TARGET_GRIPPER;
-//   record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
-//   record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
-//   record_packet[7] = INSTR_STATUS;
-//   size_t txIdx = 8;
-// 
-//   // TIME: running 16-bit unsigned counter since Teensy power-on
-//   record_packet[txIdx+0] =; 
-//   record_packet[txIdx+1] =;
-//   record_packet[txIdx+2] =;
-//   record_packet[txIdx+3] =;
-//   record_packet[txIdx+4] =;
-// 
-//   record_packet[txIdx+5] = ',';
-// 
-//   if (adhesive_engage) {
-//     record_packet[txIdx+6] ='E';
-//   } else {
-//     record_packet[txIdx+6] ='D';
-//   }
-// 
-//   if (wrist_lock) { 
-//     record_packet[txIdx+7] = 'L';
-//   } else {
-//     record_packet[txIdx+7] = 'U';
-//   }
-// 
-//   if (automatic_mode_enable) { 
-//     record_packet[txIdx+8] = 'A';
-//   } else {
-//     record_packet[txIdx+8] = '*';
-//   }
-// 
-//   record_packet[txIdx+9] = ',';
-// 
-//   // SRV_L1_CURR
-//   record_packet[txIdx+10] =
-//   record_packet[txIdx+11] =
-//   record_packet[txIdx+12] =
-//   record_packet[txIdx+13] =
-// 
-//   record_packet[txIdx+14] = ',';
-// 
-//   // SRV_L2_CURR
-//   record_packet[txIdx+15] = ;
-//   record_packet[txIdx+16] = ;
-//   record_packet[txIdx+17] = ;
-//   record_packet[txIdx+18] = ;
-// 
-//   record_packet[txIdx+19] = ',';
-// 
-//   // SRV_R_CURR 
-//   record_packet[txIdx+20] = ;
-//   record_packet[txIdx+21] = ;
-//   record_packet[txIdx+22] = ;
-//   record_packet[txIdx+23] = ;
-// 
-//   record_packet[txIdx+24] = ',';
-// 
-//   // SRV_W_CURR 
-//   record_packet[txIdx+25] = ;
-//   record_packet[txIdx+26] = ;
-//   record_packet[txIdx+27] = ;
-//   record_packet[txIdx+28] = ;
-// 
-//   record_packet[txIdx+29] = ',';
-// 
-//   // TOF
-//   record_packet[txIdx+30] = ;
-//   record_packet[txIdx+31] = ;
-//   record_packet[txIdx+32] = ;
-//   
-//   record_packet[txIdx+33] = ',';
-//   
-//   
-//   if (overtemperature_flag) {
-//     record_packet[txIdx+34] = '*';
-//   } else {
-//     record_packet[txIdx+34] = '-';
-//   }
-// 
-//   unsigned short crc_value = 0;
-//   crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
-//   record_packet[43] = LowByte(crc_value);
-//   record_packet[44] = HighByte(crc_value);
-// 
-//   SendPacket(record_packet, record_packet_len);
-// }
+/*
+void SendRecordPacket() {
+  size_t record_packet_len = 46; 
+  unsigned char record_packet[record_packet_len];
+  record_packet[0] = 0xff;
+  record_packet[1] = 0xff;
+  record_packet[2] = 0xfd;
+  record_packet[3] = 0x00;
+  record_packet[4] = TARGET_GRIPPER;
+  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
+  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
+  record_packet[7] = INSTR_STATUS;
+  record_packet[8] = err_byte; 
+  size_t txIdx = 9;
+
+  // TIME: running 16-bit unsigned counter since Teensy power-on
+  record_packet[txIdx+0] =; 
+  record_packet[txIdx+1] =;
+  record_packet[txIdx+2] =;
+  record_packet[txIdx+3] =;
+  record_packet[txIdx+4] =;
+
+  record_packet[txIdx+5] = ',';
+
+  record_packet[txIdx+6] = adhesive_engage ? 'E' : 'D';
+
+  record_packet[txIdx+7] = wrist_lock ? 'L' : 'U';
+
+  record_packet[txIdx+8] = automatic_mode_enable ? 'A' : '*';
+
+  record_packet[txIdx+9] = ',';
+
+  // SRV_L1_CURR
+  record_packet[txIdx+10] =
+  record_packet[txIdx+11] =
+  record_packet[txIdx+12] =
+  record_packet[txIdx+13] =
+
+  record_packet[txIdx+14] = ',';
+
+  // SRV_L2_CURR
+  record_packet[txIdx+15] = ;
+  record_packet[txIdx+16] = ;
+  record_packet[txIdx+17] = ;
+  record_packet[txIdx+18] = ;
+
+  record_packet[txIdx+19] = ',';
+
+  // SRV_R_CURR 
+  record_packet[txIdx+20] = ;
+  record_packet[txIdx+21] = ;
+  record_packet[txIdx+22] = ;
+  record_packet[txIdx+23] = ;
+
+  record_packet[txIdx+24] = ',';
+
+  // SRV_W_CURR 
+  record_packet[txIdx+25] = ;
+  record_packet[txIdx+26] = ;
+  record_packet[txIdx+27] = ;
+  record_packet[txIdx+28] = ;
+
+  record_packet[txIdx+29] = ',';
+
+  // TOF
+  record_packet[txIdx+30] = ;
+  record_packet[txIdx+31] = ;
+  record_packet[txIdx+32] = ;
+  
+  record_packet[txIdx+33] = ',';
+  
+  record_packet[txIdx+34] = overtemperature_flag ? '*' : '-';
+
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
+  record_packet[43] = LowByte(crc_value);
+  record_packet[44] = HighByte(crc_value);
+
+  SendPacket(record_packet, record_packet_len);
+}
+*/
 
 // Reset state of received_packet
 void ResetState() {
@@ -288,6 +275,7 @@ void ProcessData() {
             break;
           case RECORD:
             Serial.println("RECORD");
+            // SendRecordPacket(); 
             break;
           case EXPERIMENT:
             Serial.println("EXPERIMENT");
@@ -356,7 +344,7 @@ void ProcessData() {
 }
 
 void UpdateGripperState() {
-  // Read four status bytes
+  // TODO(acauligi): Read five status bytes
   // adhesive_engage;
   // wrist_lock;
   // automatic_mode_enable;
@@ -435,7 +423,7 @@ void setup() {
   Serial1.begin(115200);
   Serial.begin(115200);
 
-  // Gripper states
+  // Default gripper states
   adhesive_engage = false;
   wrist_lock = false;
   automatic_mode_enable = false;
@@ -448,7 +436,9 @@ void setup() {
   ndx = 5;
   toggle = 1;
   send_ack_packet = false;
+  err_state = 0x00;
 
+  // Set LED pins
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(6, OUTPUT);
@@ -499,4 +489,9 @@ void loop() {
   IncomingData();
   ProcessData();
   WriteToCard();
+
+  // OpenGripper();
+  // delay(3000);
+  // CloseGripper();
+  // delay(3000);
 }

@@ -14,7 +14,7 @@ void loop() {
   // SendReadPacket();
   // SendWritePacket();
   // SendChecksumPacket();
-  SendWritePacket();
+  SendOpenPacket();
   Serial.println("The packet has been sent!");
   // IncomingData();
   // if (new_data) {

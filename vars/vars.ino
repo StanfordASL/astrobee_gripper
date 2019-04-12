@@ -1,4 +1,3 @@
-//Include all necessary libraries, wire, INA219, ServoDriver, Servo and VL6180X
 #include <Wire.h>
 #include <Servo.h>
 #include <Adafruit_INA219.h>
@@ -65,6 +64,8 @@ size_t packet_len;
 size_t ndx;
 int toggle;
 bool send_ack_packet; 
+uint32_t IDX;
+unsigned char err_state; 
 
 const size_t fixed_packet_len = 7; 
 const int num_chars = 30;
@@ -83,6 +84,7 @@ const int wrist_delay = 20;    //setting wrist lock delay timer
 // File object for SD cart write
 File my_file;
 String fn = "card_testing.txt";
+// TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
 float current_mA_A;
 float current_mA_B;
 float current_mA_C;
