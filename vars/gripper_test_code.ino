@@ -26,8 +26,8 @@ void SendErrorPacket(char ERR_NUMBER) {
   err_packet[2] = 0xfd;
   err_packet[3] = 0x00;
   err_packet[4] = TARGET_GRIPPER;
-  err_packet[5] = LowByte(err_packet_len - fixed_packet_len);
-  err_packet[6] = HighByte(err_packet_len - fixed_packet_len);
+  err_packet[5] = LowByte(err_packet_len - hdr_len);
+  err_packet[6] = HighByte(err_packet_len - hdr_len);
   err_packet[7] = INSTR_STATUS;
   err_packet[8] = err_state; 
 
@@ -47,8 +47,8 @@ void SendPingPacket() {
   ping_packet[2] = 0xfd;
   ping_packet[3] = 0x00;
   ping_packet[4] = TARGET_GRIPPER;
-  ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
-  ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
+  ping_packet[5] = LowByte(ping_packet_len - hdr_len);
+  ping_packet[6] = HighByte(ping_packet_len - hdr_len);
   ping_packet[7] = INSTR_STATUS;
   ping_packet[8] = err_state;
 
@@ -77,8 +77,8 @@ void SendStatusPacket() {
   status_packet[2] = 0xfd;
   status_packet[3] = 0x00;
   status_packet[4] = TARGET_GRIPPER;
-  status_packet[5] = LowByte(status_packet_len - fixed_packet_len);
-  status_packet[6] = HighByte(status_packet_len - fixed_packet_len);
+  status_packet[5] = LowByte(status_packet_len - hdr_len);
+  status_packet[6] = HighByte(status_packet_len - hdr_len);
   status_packet[7] = INSTR_STATUS;
   status_packet[8] = err_state; 
 
@@ -107,8 +107,8 @@ void SendRecordPacket() {
   record_packet[2] = 0xfd;
   record_packet[3] = 0x00;
   record_packet[4] = TARGET_GRIPPER;
-  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
-  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
+  record_packet[5] = LowByte(record_packet_len - hdr_len);
+  record_packet[6] = HighByte(record_packet_len - hdr_len);
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_byte; 
   size_t txIdx = 9;
@@ -187,8 +187,8 @@ void SendExperimentPacket() {
   experiment_packet[2] = 0xfd;
   experiment_packet[3] = 0x00;
   experiment_packet[4] = TARGET_GRIPPER;
-  experiment_packet[5] = LowByte(experiment_packet_len - fixed_packet_len);
-  experiment_packet[6] = HighByte(experiment_packet_len - fixed_packet_len);
+  experiment_packet[5] = LowByte(experiment_packet_len - hdr_len);
+  experiment_packet[6] = HighByte(experiment_packet_len - hdr_len);
   experiment_packet[7] = INSTR_STATUS;
   experiment_packet[8] = err_byte; 
   
@@ -213,7 +213,7 @@ void ResetState() {
   memset(received_packet, 0, sizeof(received_packet));
   memset(hdr_buffer, 0, sizeof(hdr_buffer));
 
-  packet_len = fixed_packet_len;
+  packet_len = hdr_len;
   ndx = 5;
   send_ack_packet = false;
 }
@@ -230,12 +230,12 @@ void IncomingData() {
         (hdr_buffer[3] != 0x00) ||
         (hdr_buffer[4] != TARGET_GRIPPER)) {
       // Overwrite existing header buffer if invalid
-      for (size_t k = 0; k < hdr_size - 1; k++) {
+      for (size_t k = 0; k < hdr_const_byte_len - 1; k++) {
         hdr_buffer[k] = hdr_buffer[k + 1];
       }
-      hdr_buffer[hdr_size - 1] = rc;
+      hdr_buffer[hdr_const_byte_len - 1] = rc;
     } else {
-      for (size_t k = 0; k < hdr_size; k++) received_packet[k] = hdr_buffer[k];
+      for (size_t k = 0; k < hdr_const_byte_len; k++) received_packet[k] = hdr_buffer[k];
       received_packet[ndx] = rc;
 
       if (ndx == 6) {
@@ -459,7 +459,7 @@ void setup() {
 
   // Global variables
   new_data = false;
-  packet_len = fixed_packet_len;
+  packet_len = hdr_len;
   ndx = 5;
   toggle = 1;
   send_ack_packet = false;
@@ -509,7 +509,7 @@ void loop() {
   UpdateGripperState();
   IncomingData();
   ProcessData();
-  WriteToCard();
+  // WriteToCard();
 
   // OpenGripper();
   // delay(3000);

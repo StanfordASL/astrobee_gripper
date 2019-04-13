@@ -2,6 +2,9 @@ void setup() {
   Serial1.begin(115200);
   Serial.begin(115200);
 
+  pinMode(51, OUTPUT);
+  digitalWrite(51, HIGH);
+
   // Global variables 
   new_data = false;
   packet_len = fixed_packet_len;
