@@ -82,12 +82,12 @@ void SendStatusPacket() {
   status_packet[7] = INSTR_STATUS;
   status_packet[8] = err_state; 
 
-  // STATUS_H = [- - - - AUTO - WRIST ADH] 
-  unsigned char STATUS_H = (automatic_mode_enable<<3) | (wrist_lock<<1) | (adhesive_engage);
+  // STATUS_H = [TEMP -   -   -   -   -   - EXP]
+  unsigned char STATUS_H = (overtemperature_flag<<7) | experiment_in_progress;
   status_packet[9] = STATUS_H;
 
-  // STATUS_L = [TEMP -   -   -   -   -   - EXP]
-  unsigned char STATUS_L = (overtemperature_flag<<7) | experiment_in_progress;
+  // STATUS_L = [- - - - AUTO - WRIST ADH] 
+  unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
   status_packet[10] = STATUS_L; 
 
   unsigned short crc_value = 0;
@@ -177,6 +177,32 @@ void SendRecordPacket() {
   record_packet[44] = HighByte(crc_value);
 
   SendPacket(record_packet, record_packet_len);
+}
+
+void SendExperimentPacket() {
+  size_t experiment_packet_len = 15; 
+  unsigned char experiment_packet[experiment_packet_len];
+  experiment_packet[0] = 0xff;
+  experiment_packet[1] = 0xff;
+  experiment_packet[2] = 0xfd;
+  experiment_packet[3] = 0x00;
+  experiment_packet[4] = TARGET_GRIPPER;
+  experiment_packet[5] = LowByte(experiment_packet_len - fixed_packet_len);
+  experiment_packet[6] = HighByte(experiment_packet_len - fixed_packet_len);
+  experiment_packet[7] = INSTR_STATUS;
+  experiment_packet[8] = err_byte; 
+  
+  experiment_packet[9] = IDX4;
+  experiment_packet[10] = IDX3;
+  experiment_packet[11] = IDX2;
+  experiment_packet[12] = IDX1;
+
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, experiment_packet, experiment_packet_len - 2);
+  experiment_packet[13] = LowByte(crc_value);
+  experiment_packet[14] = HighByte(crc_value);
+
+  SendPacket(experiment_packet, experiment_packet_len);
 }
 */
 
@@ -272,6 +298,7 @@ void ProcessData() {
         switch (addr) {
           case STATUS:
             Serial.println("STATUS");
+            // SendStatusPacket(); 
             break;
           case RECORD:
             Serial.println("RECORD");
@@ -445,12 +472,6 @@ void setup() {
   pinMode(21, OUTPUT);
   pinMode(22, OUTPUT);
   pinMode(23, OUTPUT);
-//  digitalWrite(4, LOW);
-//  digitalWrite(5, LOW);
-//  digitalWrite(6, HIGH);
-//  digitalWrite(21, LOW);
-//  digitalWrite(22, LOW);
-//  digitalWrite(23, HIGH);
   analogWrite(4, 0);
   analogWrite(5, 0);
   analogWrite(6, LED_HIGH);
