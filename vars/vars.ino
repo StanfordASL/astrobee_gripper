@@ -70,11 +70,11 @@ bool send_ack_packet;
 uint32_t experiment_idx;
 unsigned char err_state; 
 
-const size_t fixed_packet_len = 7; 
-const int num_chars = 30;
-const size_t hdr_size = 5;
+const size_t hdr_len = 7; 
+const int num_chars = 64;             // TODO(acauligi): max # of bytes?
+const size_t hdr_const_byte_len = 5;
+unsigned char hdr_buffer[hdr_const_byte_len];
 unsigned char received_packet[num_chars];
-unsigned char hdr_buffer[hdr_size];
 const int LED_HIGH = 80;
 
 // Assigning the PWMServoDriver I2C address
@@ -90,12 +90,6 @@ File my_file;
 int chip_select = 10;
 String fn = "card_testing.txt";
 
-// TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
-float current_mA_A;
-float current_mA_B;
-float current_mA_C;
-float current_mA_D;
-
 //Creating VL6180X distance sensor object
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range;
@@ -106,6 +100,12 @@ Adafruit_INA219 ina219_A;
 Adafruit_INA219 ina219_B(0x41);
 Adafruit_INA219 ina219_C(0x44);
 Adafruit_INA219 ina219_D(0x45);
+
+// TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
+float current_mA_A;
+float current_mA_B;
+float current_mA_C;
+float current_mA_D;
 
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
   unsigned short i, j;

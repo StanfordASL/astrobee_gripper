@@ -13,7 +13,7 @@ void ResetState() {
   memset(received_packet, 0, sizeof(received_packet));
   memset(hdr_buffer, 0, sizeof(hdr_buffer));
 
-  packet_len = fixed_packet_len;
+  packet_len = hdr_len;
   ndx = 5;
   send_ack_packet = false;
 }
@@ -30,12 +30,12 @@ void IncomingData() {
         (hdr_buffer[3] != 0x00) ||
         (hdr_buffer[4] != TARGET_GRIPPER)) {
       // Overwrite existing header buffer if invalid
-      for (size_t k = 0; k < hdr_size - 1; k++) {
+      for (size_t k = 0; k < hdr_const_byte_len - 1; k++) {
         hdr_buffer[k] = hdr_buffer[k + 1];
       }
-      hdr_buffer[hdr_size - 1] = rc;
+      hdr_buffer[hdr_const_byte_len - 1] = rc;
     } else {
-      for (size_t k = 0; k < hdr_size; k++) received_packet[k] = hdr_buffer[k];
+      for (size_t k = 0; k < hdr_const_byte_len; k++) received_packet[k] = hdr_buffer[k];
       received_packet[ndx] = rc;
 
       if (ndx == 6) {
@@ -232,7 +232,7 @@ void setup() {
 
   // Global variables
   new_data = false;
-  packet_len = fixed_packet_len;
+  packet_len = hdr_len;
   ndx = 5;
   toggle = 1;
   send_ack_packet = false;
