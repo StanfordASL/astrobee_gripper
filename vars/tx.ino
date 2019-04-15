@@ -18,8 +18,8 @@ void SendErrorPacket(char ERR_NUMBER) {
   err_packet[2] = 0xfd;
   err_packet[3] = 0x00;
   err_packet[4] = TARGET_GRIPPER;
-  err_packet[5] = LowByte(err_packet_len - fixed_packet_len);
-  err_packet[6] = HighByte(err_packet_len - fixed_packet_len);
+  err_packet[5] = LowByte(err_packet_len - hdr_len);
+  err_packet[6] = HighByte(err_packet_len - hdr_len);
   err_packet[7] = INSTR_STATUS;
   err_packet[8] = err_state; 
 
@@ -39,8 +39,8 @@ void SendPingPacket() {
   ping_packet[2] = 0xfd;
   ping_packet[3] = 0x00;
   ping_packet[4] = TARGET_GRIPPER;
-  ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
-  ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
+  ping_packet[5] = LowByte(ping_packet_len - hdr_len);
+  ping_packet[6] = HighByte(ping_packet_len - hdr_len);
   ping_packet[7] = INSTR_STATUS;
   ping_packet[8] = err_state;
 
@@ -69,8 +69,8 @@ void SendStatusPacket() {
   status_packet[2] = 0xfd;
   status_packet[3] = 0x00;
   status_packet[4] = TARGET_GRIPPER;
-  status_packet[5] = LowByte(status_packet_len - fixed_packet_len);
-  status_packet[6] = HighByte(status_packet_len - fixed_packet_len);
+  status_packet[5] = LowByte(status_packet_len - hdr_len);
+  status_packet[6] = HighByte(status_packet_len - hdr_len);
   status_packet[7] = INSTR_STATUS;
   status_packet[8] = err_state; 
 
@@ -99,8 +99,8 @@ void SendRecordPacket() {
   record_packet[2] = 0xfd;
   record_packet[3] = 0x00;
   record_packet[4] = TARGET_GRIPPER;
-  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
-  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
+  record_packet[5] = LowByte(record_packet_len - hdr_len);
+  record_packet[6] = HighByte(record_packet_len - hdr_len);
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_byte; 
   size_t txIdx = 9;
@@ -123,8 +123,8 @@ void SendExperimentPacket() {
   experiment_packet[2] = 0xfd;
   experiment_packet[3] = 0x00;
   experiment_packet[4] = TARGET_GRIPPER;
-  experiment_packet[5] = LowByte(experiment_packet_len - fixed_packet_len);
-  experiment_packet[6] = HighByte(experiment_packet_len - fixed_packet_len);
+  experiment_packet[5] = LowByte(experiment_packet_len - hdr_len);
+  experiment_packet[6] = HighByte(experiment_packet_len - hdr_len);
   experiment_packet[7] = INSTR_STATUS;
   experiment_packet[8] = err_byte; 
  

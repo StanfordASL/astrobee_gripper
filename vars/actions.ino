@@ -105,13 +105,13 @@ void CloseExperiment() {
 void Automatic() {
   if (!automatic_mode_enable) {
     return;
-  else if (!ReadToF()) {
+  } else if (!ReadToF()) {
     return;
   }
 
   if (vl_range < vl_range_trigger && !adhesive_engage && !wrist_lock) {
     OpenGripper();
-  else if (vl_range > vl_range_trigger && adhesive_engage && wrist_lock) {
+  } else if (vl_range > vl_range_trigger && adhesive_engage && wrist_lock) {
     CloseGripper();
   }
 }

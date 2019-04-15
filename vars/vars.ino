@@ -93,7 +93,7 @@ String fn = "card_testing.txt";
 //Creating VL6180X distance sensor object
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range;
-const uint8_t vl_range_trigger; 
+const uint8_t vl_range_trigger = 100; // TODO(acauligi): determine units and appropriate value 
 
 //Assigning the INA219 current sensor I2C address
 Adafruit_INA219 ina219_A;

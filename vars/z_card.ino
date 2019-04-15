@@ -12,10 +12,10 @@ void WriteToCard() {
     // TIME: running 16-bit unsigned counter since Teensy power-on
     time = millis();
     record_packet[0] = 0x00; 
-    record_packet[1] = (time & 0xff000000UL) >> 24;
-    record_packet[2] = (time & 0x00ff0000UL) >> 16;
-    record_packet[3] = (time & 0x0000ff00UL) >> 8; 
-    record_packet[4] = (time & 0x000000ffUL)     ; 
+    record_packet[1] = (char)(((unsigned long)time & 0xff000000UL) >> 24);
+    record_packet[2] = (char)(((unsigned long)time & 0x00ff0000UL) >> 16);
+    record_packet[3] = (char)(((unsigned long)time & 0x0000ff00UL) >> 8); 
+    record_packet[4] = (char)(((unsigned long)time & 0x000000ffUL)     ); 
 
     record_packet[5] = ',';
 
@@ -28,34 +28,34 @@ void WriteToCard() {
     record_packet[9] = ',';
 
     // SRV_L1_CURR
-    record_packet[10] = (current_mA_A & 0xff000000UL) >> 24;
-    record_packet[11] = (current_mA_A & 0x00ff0000UL) >> 16;
-    record_packet[12] = (current_mA_A & 0x0000ff00UL) >> 8; 
-    record_packet[13] = (current_mA_A & 0x000000ffUL)     ;
+    record_packet[10] = (char)(((unsigned long)current_mA_A & 0xff000000UL) >> 24);
+    record_packet[11] = (char)(((unsigned long)current_mA_A & 0x00ff0000UL) >> 16);
+    record_packet[12] = (char)(((unsigned long)current_mA_A & 0x0000ff00UL) >> 8); 
+    record_packet[13] = (char)(((unsigned long)current_mA_A & 0x000000ffUL)     );
 
     record_packet[14] = ',';
 
     // SRV_L2_CURR
-    record_packet[15] = (current_mA_B & 0xff000000UL) >> 24;
-    record_packet[16] = (current_mA_B & 0x00ff0000UL) >> 16;
-    record_packet[17] = (current_mA_B & 0x0000ff00UL) >> 8; 
-    record_packet[18] = (current_mA_B & 0x000000ffUL)     ; 
+    record_packet[15] = (char)(((unsigned long)current_mA_B & 0xff000000UL) >> 24);
+    record_packet[16] = (char)(((unsigned long)current_mA_B & 0x00ff0000UL) >> 16);
+    record_packet[17] = (char)(((unsigned long)current_mA_B & 0x0000ff00UL) >> 8); 
+    record_packet[18] = (char)(((unsigned long)current_mA_B & 0x000000ffUL)     ); 
 
     record_packet[19] = ',';
 
     // SRV_R_CURR 
-    record_packet[20] = (current_mA_C & 0xff000000UL) >> 24;
-    record_packet[21] = (current_mA_C & 0x00ff0000UL) >> 16;
-    record_packet[22] = (current_mA_C & 0x0000ff00UL) >> 8; 
-    record_packet[23] = (current_mA_C & 0x000000ffUL)     ; 
+    record_packet[20] = (char)(((unsigned long)current_mA_C & 0xff000000UL) >> 24);
+    record_packet[21] = (char)(((unsigned long)current_mA_C & 0x00ff0000UL) >> 16);
+    record_packet[22] = (char)(((unsigned long)current_mA_C & 0x0000ff00UL) >> 8); 
+    record_packet[23] = (char)(((unsigned long)current_mA_C & 0x000000ffUL)     ); 
 
     record_packet[24] = ',';
 
     // SRV_W_CURR 
-    record_packet[25] = (current_mA_D & 0xff000000UL) >> 24;
-    record_packet[26] = (current_mA_D & 0x00ff0000UL) >> 16;
-    record_packet[27] = (current_mA_D & 0x0000ff00UL) >> 8; 
-    record_packet[28] = (current_mA_D & 0x000000ffUL)     ; 
+    record_packet[25] = (char)(((unsigned long)current_mA_D & 0xff000000UL) >> 24);
+    record_packet[26] = (char)(((unsigned long)current_mA_D & 0x00ff0000UL) >> 16);
+    record_packet[27] = (char)(((unsigned long)current_mA_D & 0x0000ff00UL) >> 8); 
+    record_packet[28] = (char)(((unsigned long)current_mA_D & 0x000000ffUL)     ); 
 
     record_packet[29] = ',';
 

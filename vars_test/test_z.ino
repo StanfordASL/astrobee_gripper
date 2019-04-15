@@ -5,7 +5,7 @@ void setup() {
   pinMode(51, OUTPUT);
   digitalWrite(51, HIGH);
 
-  // Global variables 
+  // Global variables
   new_data = false;
   packet_len = fixed_packet_len;
   ndx = 5;
@@ -13,20 +13,22 @@ void setup() {
 
 void loop() {
   ResetState();
-  // SendPingPacket();
-  // SendReadPacket();
-  // SendWritePacket();
-  // SendChecksumPacket();
+  //  SendPingPacket();
+  //   SendReadPacket();
+  //   SendWritePacket();
+  //   SendChecksumPacket();
   SendOpenPacket();
+  delay(1500);
+  SendClosePacket();
   Serial.println("The packet has been sent!");
-  // IncomingData();
-  // if (new_data) {
-  //   bool packet_valid = VerifyChecksumRxPacket();
-  //   if (packet_valid) {
-  //     Serial.println("Test passed!");
-  //   } else {
-  //     Serial.println("Test failed!");
-  //   }
-  // }
-  delay(3000);
+  IncomingData();
+  if (new_data) {
+    bool packet_valid = VerifyChecksumRxPacket();
+    if (packet_valid) {
+      Serial.println("Test passed!");
+    } else {
+      Serial.println("Test failed!");
+    }
+  }
+  delay(1500);
 }
