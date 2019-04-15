@@ -6,206 +6,6 @@ unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
-// Send packet using UART
-void SendPacket(unsigned char* packet, size_t len) {
-  Serial1.write(packet, len);
-}
-
-unsigned char ConstructErrorByte(char ERR_NUMBER) {
-  unsigned char ERR_BYTE = (0x01 << 7) | ERR_NUMBER;
-  return ERR_BYTE;
-}
-
-void SendErrorPacket(char ERR_NUMBER) {
-  err_state = ConstructErrorByte(ERR_NUMBER);
-
-  size_t err_packet_len = 11;
-  unsigned char err_packet[err_packet_len];
-  err_packet[0] = 0xff;
-  err_packet[1] = 0xff;
-  err_packet[2] = 0xfd;
-  err_packet[3] = 0x00;
-  err_packet[4] = TARGET_GRIPPER;
-  err_packet[5] = LowByte(err_packet_len - fixed_packet_len);
-  err_packet[6] = HighByte(err_packet_len - fixed_packet_len);
-  err_packet[7] = INSTR_STATUS;
-  err_packet[8] = err_state; 
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, err_packet, err_packet_len - 2);
-  err_packet[9] = LowByte(crc_value);
-  err_packet[10] = HighByte(crc_value);
-
-  SendPacket(err_packet, err_packet_len);
-}
-
-void SendPingPacket() {
-  size_t ping_packet_len = 14;
-  unsigned char ping_packet[ping_packet_len];
-  ping_packet[0] = 0xff;
-  ping_packet[1] = 0xff;
-  ping_packet[2] = 0xfd;
-  ping_packet[3] = 0x00;
-  ping_packet[4] = TARGET_GRIPPER;
-  ping_packet[5] = LowByte(ping_packet_len - fixed_packet_len);
-  ping_packet[6] = HighByte(ping_packet_len - fixed_packet_len);
-  ping_packet[7] = INSTR_STATUS;
-  ping_packet[8] = err_state;
-
-  // dummy status packet parameters
-  ping_packet[9]  = 0x01;
-  ping_packet[10] = 0x02;
-  ping_packet[11] = 0x03;
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, ping_packet, ping_packet_len - 2);
-  ping_packet[12] = LowByte(crc_value);
-  ping_packet[13] = HighByte(crc_value);
-
-  SendPacket(ping_packet, ping_packet_len);
-}
-
-void SendAcknowledgePacket() {
-  unsigned char ack_packet[packet_len];
-}
-
-void SendStatusPacket() {
-  size_t status_packet_len = 13; 
-  unsigned char status_packet[status_packet_len];
-  status_packet[0] = 0xff;
-  status_packet[1] = 0xff;
-  status_packet[2] = 0xfd;
-  status_packet[3] = 0x00;
-  status_packet[4] = TARGET_GRIPPER;
-  status_packet[5] = LowByte(status_packet_len - fixed_packet_len);
-  status_packet[6] = HighByte(status_packet_len - fixed_packet_len);
-  status_packet[7] = INSTR_STATUS;
-  status_packet[8] = err_state; 
-
-  // STATUS_H = [TEMP -   -   -   -   -   - EXP]
-  unsigned char STATUS_H = (overtemperature_flag<<7) | experiment_in_progress;
-  status_packet[9] = STATUS_H;
-
-  // STATUS_L = [- - - - AUTO - WRIST ADH] 
-  unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
-  status_packet[10] = STATUS_L; 
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, status_packet, status_packet_len - 2);
-  status_packet[11] = LowByte(crc_value);
-  status_packet[12] = HighByte(crc_value);
-
-  SendPacket(status_packet, status_packet_len);
-}  
-
-/*
-void SendRecordPacket() {
-  size_t record_packet_len = 46; 
-  unsigned char record_packet[record_packet_len];
-  record_packet[0] = 0xff;
-  record_packet[1] = 0xff;
-  record_packet[2] = 0xfd;
-  record_packet[3] = 0x00;
-  record_packet[4] = TARGET_GRIPPER;
-  record_packet[5] = LowByte(record_packet_len - fixed_packet_len);
-  record_packet[6] = HighByte(record_packet_len - fixed_packet_len);
-  record_packet[7] = INSTR_STATUS;
-  record_packet[8] = err_byte; 
-  size_t txIdx = 9;
-
-  // TIME: running 16-bit unsigned counter since Teensy power-on
-  record_packet[txIdx+0] =; 
-  record_packet[txIdx+1] =;
-  record_packet[txIdx+2] =;
-  record_packet[txIdx+3] =;
-  record_packet[txIdx+4] =;
-
-  record_packet[txIdx+5] = ',';
-
-  record_packet[txIdx+6] = adhesive_engage ? 'E' : 'D';
-
-  record_packet[txIdx+7] = wrist_lock ? 'L' : 'U';
-
-  record_packet[txIdx+8] = automatic_mode_enable ? 'A' : '*';
-
-  record_packet[txIdx+9] = ',';
-
-  // SRV_L1_CURR
-  record_packet[txIdx+10] =
-  record_packet[txIdx+11] =
-  record_packet[txIdx+12] =
-  record_packet[txIdx+13] =
-
-  record_packet[txIdx+14] = ',';
-
-  // SRV_L2_CURR
-  record_packet[txIdx+15] = ;
-  record_packet[txIdx+16] = ;
-  record_packet[txIdx+17] = ;
-  record_packet[txIdx+18] = ;
-
-  record_packet[txIdx+19] = ',';
-
-  // SRV_R_CURR 
-  record_packet[txIdx+20] = ;
-  record_packet[txIdx+21] = ;
-  record_packet[txIdx+22] = ;
-  record_packet[txIdx+23] = ;
-
-  record_packet[txIdx+24] = ',';
-
-  // SRV_W_CURR 
-  record_packet[txIdx+25] = ;
-  record_packet[txIdx+26] = ;
-  record_packet[txIdx+27] = ;
-  record_packet[txIdx+28] = ;
-
-  record_packet[txIdx+29] = ',';
-
-  // TOF
-  record_packet[txIdx+30] = ;
-  record_packet[txIdx+31] = ;
-  record_packet[txIdx+32] = ;
-  
-  record_packet[txIdx+33] = ',';
-  
-  record_packet[txIdx+34] = overtemperature_flag ? '*' : '-';
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
-  record_packet[43] = LowByte(crc_value);
-  record_packet[44] = HighByte(crc_value);
-
-  SendPacket(record_packet, record_packet_len);
-}
-
-void SendExperimentPacket() {
-  size_t experiment_packet_len = 15; 
-  unsigned char experiment_packet[experiment_packet_len];
-  experiment_packet[0] = 0xff;
-  experiment_packet[1] = 0xff;
-  experiment_packet[2] = 0xfd;
-  experiment_packet[3] = 0x00;
-  experiment_packet[4] = TARGET_GRIPPER;
-  experiment_packet[5] = LowByte(experiment_packet_len - fixed_packet_len);
-  experiment_packet[6] = HighByte(experiment_packet_len - fixed_packet_len);
-  experiment_packet[7] = INSTR_STATUS;
-  experiment_packet[8] = err_byte; 
-  
-  experiment_packet[9] = IDX4;
-  experiment_packet[10] = IDX3;
-  experiment_packet[11] = IDX2;
-  experiment_packet[12] = IDX1;
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, experiment_packet, experiment_packet_len - 2);
-  experiment_packet[13] = LowByte(crc_value);
-  experiment_packet[14] = HighByte(crc_value);
-
-  SendPacket(experiment_packet, experiment_packet_len);
-}
-*/
-
 // Reset state of received_packet
 void ResetState() {
   new_data = false;
@@ -370,80 +170,52 @@ void ProcessData() {
   }
 }
 
-void UpdateGripperState() {
-  // TODO(acauligi): Read five status bytes
-  // adhesive_engage;
-  // wrist_lock;
-  // automatic_mode_enable;
-  // experiment_in_progress;
-  // overtemperature_flag; 
+bool ReadToF() {
+  // See: https://github.com/adafruit/Adafruit_VL6180X/tree/master/examples/vl6180x
 
+  vl_range = vl.readRange();
+  uint8_t status = vl.readRangeStatus();
+  if  ((status >= VL6180X_ERROR_SYSERR_1) && (status <= VL6180X_ERROR_SYSERR_5)) {
+    Serial.println("System error");
+  } else if (status == VL6180X_ERROR_ECEFAIL) {
+    Serial.println("ECE failure");
+  } else if (status == VL6180X_ERROR_NOCONVERGE) {
+    Serial.println("No convergence");
+  } else if (status == VL6180X_ERROR_RANGEIGNORE) {
+    Serial.println("Ignoring range");
+  } else if (status == VL6180X_ERROR_SNR) {
+    Serial.println("Signal/Noise error");
+  } else if (status == VL6180X_ERROR_RAWUFLOW) {
+    Serial.println("Raw reading underflow");
+  } else if (status == VL6180X_ERROR_RAWOFLOW) {
+    Serial.println("Raw reading overflow");
+  } else if (status == VL6180X_ERROR_RANGEUFLOW) {
+    Serial.println("Range reading underflow");
+  } else if (status == VL6180X_ERROR_RANGEOFLOW) {
+    Serial.println("Range reading overflow");
+  } else {
+    return true;
+  }
+  return false;
+}
+
+void UpdateGripperState() {
+  // Take ToF sensor measurement
+  if (automatic_mode_enable) {
+    if (!ReadToF()) {
+      // faulty ToF sensor reading, send error byte
+      // SendErrorPacket(ERR_TOF);
+    }
+  }
+
+  // Take current sensor measurements
   current_mA_A = ina219_A.getCurrent_mA();
   current_mA_B = ina219_B.getCurrent_mA();
   current_mA_C = ina219_C.getCurrent_mA();
   current_mA_D = ina219_D.getCurrent_mA();
-}
 
-void WriteToCard() {
-//  my_file = SD.open("test_write.txt", FILE_WRITE);
-//  if (my_file) {
-//    my_file.println(current_mA_A);
-//    my_file.println(current_mA_B);
-//    my_file.println(current_mA_C);
-//    my_file.println(current_mA_D);
-//    my_file.close();
-//    // Serial.println("Writing to SD card");
-//  } else {
-//    // Serial.println("Not writing to SD card");
-//  }
-//    while (!Serial) {
-//    ; // wait for serial port to connect. Needed for native USB port only
-//  }
-
-
-  Serial.print("Initializing SD card...");
-
-  if (!SD.begin(10)) {
-    Serial.println("initialization failed!");
-    while (1);
-  }
-  Serial.println("initialization done.");
-
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
-  my_file = SD.open("test.txt", FILE_WRITE);
-
-  // if the file opened okay, write to it:
-  if (my_file) {
-    Serial.print("Writing to test.txt...");
-     my_file.println("testing 1, 2, 3.");
-    my_file.println(current_mA_A);
-    my_file.println(current_mA_B);
-    my_file.println(current_mA_C);
-    my_file.println(current_mA_D);
-    // close the file:
-    my_file.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-
-  // re-open the file for reading:
-  my_file = SD.open("test.txt");
-  if (my_file) {
-    Serial.println("test.txt:");
-
-    // read from the file until there's nothing else in it:
-    while (my_file.available()) {
-      Serial.write(my_file.read());
-    }
-    // close the file:
-    my_file.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
+  // TODO(acauligi)
+  // overtemperature_flag; 
 }
 
 void setup() {
@@ -456,6 +228,7 @@ void setup() {
   automatic_mode_enable = false;
   experiment_in_progress = false;
   overtemperature_flag = false;
+  experiment_idx = 0; 
 
   // Global variables
   new_data = false;
@@ -479,6 +252,8 @@ void setup() {
   analogWrite(22, 0);
   analogWrite(23, LED_HIGH);
   
+  // Initialize the VL6180X
+  vl.begin();
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
@@ -502,14 +277,19 @@ void setup() {
 
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
-
+  
+  pinMode(chip_select, OUTPUT);
+  if (!SD.begin(chip_select)) {
+    Serial.println("SD card initialization failed! Trying again...");
+    while (1);
+  }
 }
 
 void loop() {
   UpdateGripperState();
   IncomingData();
   ProcessData();
-  WriteToCard();
+  Automatic();
 
   // OpenGripper();
   // delay(3000);

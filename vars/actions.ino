@@ -21,6 +21,7 @@ void ToggleAuto() {
   analogWrite(22, 0);
   analogWrite(23, 0);
 
+  // TODO(acauligi): do something with grippers
   if (toggle ==  1) {
     analogWrite(21, LED_HIGH);
     toggle = 2;
@@ -72,14 +73,19 @@ void Unlock() {
 }
 
 void EnableAuto() {
+  UpdateGripperState();
+  automatic_mode_enable = true;
   return;
 }
 
 void DisableAuto() {
+  automatic_mode_enable = false;
   return;
 }
 
 void OpenExperiment() {
+  experiment_idx++;
+  experiment_in_progress = true;
   return;
 }
 
@@ -92,5 +98,20 @@ void SeekRecord() {
 }
 
 void CloseExperiment() {
+  experiment_in_progress = true;
   return;
+}
+
+void Automatic() {
+  if (!automatic_mode_enable) {
+    return;
+  else if (!ReadToF()) {
+    return;
+  }
+
+  if (vl_range < vl_range_trigger && !adhesive_engage && !wrist_lock) {
+    OpenGripper();
+  else if (vl_range > vl_range_trigger && adhesive_engage && wrist_lock) {
+    CloseGripper();
+  }
 }

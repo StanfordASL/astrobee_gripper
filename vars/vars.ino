@@ -50,6 +50,8 @@ const char ERR_DATA_RANGE       = 0x04;
 const char ERR_DATA_LEN         = 0x05;
 const char ERR_DATA_LIM         = 0x06;
 const char ERR_ACCESS           = 0x07;
+// following are custom error commands
+const char ERR_TOF           = 0x08;
 
 // Gripper states
 bool adhesive_engage;
@@ -59,12 +61,13 @@ bool experiment_in_progress;
 bool overtemperature_flag;
 
 // Global variables
+unsigned long time;
 boolean new_data; 
 size_t packet_len; 
 size_t ndx;
 int toggle;
 bool send_ack_packet; 
-uint32_t IDX;
+uint32_t experiment_idx;
 unsigned char err_state; 
 
 const size_t fixed_packet_len = 7; 
@@ -79,11 +82,14 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
 
 // Declaring wrist lock servo
 Servo wrist_lock_servo;
-const int wrist_delay = 20;    //setting wrist lock delay timer
+const int wrist_delay = 20;                 //setting wrist lock delay timer
+const int overtemperature_trigger = 45;     // Celsius
 
 // File object for SD cart write
 File my_file;
+int chip_select = 10;
 String fn = "card_testing.txt";
+
 // TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
 float current_mA_A;
 float current_mA_B;
@@ -92,6 +98,8 @@ float current_mA_D;
 
 //Creating VL6180X distance sensor object
 Adafruit_VL6180X vl = Adafruit_VL6180X();
+uint8_t vl_range;
+const uint8_t vl_range_trigger; 
 
 //Assigning the INA219 current sensor I2C address
 Adafruit_INA219 ina219_A;
