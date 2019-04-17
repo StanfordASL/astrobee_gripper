@@ -175,7 +175,7 @@ void Automatic() {
     return;
   }
 
-  // TODO(acauligi): probably change buffer into circular buffer
+  // TODO(acauligi): change buffer into circular buffer
   if (vl_range < vl_range_max && vl_range > vl_range_min) {
     if(vel_buf_idx==0) {
       last_vl_range = vl_range;

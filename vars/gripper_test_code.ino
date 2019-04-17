@@ -301,9 +301,4 @@ void loop() {
   if (experiment_in_progress) {
     WriteToCard();
   }
-
-  // OpenGripper();
-  // delay(3000);
-  // CloseGripper();
-  // delay(3000);
 }
