@@ -32,7 +32,7 @@ void SendErrorPacket(char ERR_NUMBER) {
 }
 
 void SendPingPacket() {
-  size_t ping_packet_len = 14;
+  size_t ping_packet_len = 10; 
   unsigned char ping_packet[ping_packet_len];
   ping_packet[0] = 0xff;
   ping_packet[1] = 0xff;
@@ -45,14 +45,14 @@ void SendPingPacket() {
   ping_packet[8] = err_state;
 
   // dummy status packet parameters
-  ping_packet[9]  = 0x01;
-  ping_packet[10] = 0x02;
-  ping_packet[11] = 0x03;
+  // ping_packet[9]  = 0x01;
+  // ping_packet[10] = 0x02;
+  // ping_packet[11] = 0x03;
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, ping_packet, ping_packet_len - 2);
-  ping_packet[12] = LowByte(crc_value);
-  ping_packet[13] = HighByte(crc_value);
+  ping_packet[9] = LowByte(crc_value);
+  ping_packet[10] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
 }
@@ -102,7 +102,7 @@ void SendRecordPacket() {
   record_packet[5] = LowByte(record_packet_len - hdr_len);
   record_packet[6] = HighByte(record_packet_len - hdr_len);
   record_packet[7] = INSTR_STATUS;
-  record_packet[8] = err_byte; 
+  record_packet[8] = err_state; 
   size_t txIdx = 9;
 
 
@@ -114,9 +114,10 @@ void SendRecordPacket() {
 
   SendPacket(record_packet, record_packet_len);
 }
+*/
 
 void SendExperimentPacket() {
-  size_t experiment_packet_len = 15; 
+  size_t experiment_packet_len = 9 + exp_record_len + 2;  
   unsigned char experiment_packet[experiment_packet_len];
   experiment_packet[0] = 0xff;
   experiment_packet[1] = 0xff;
@@ -126,24 +127,16 @@ void SendExperimentPacket() {
   experiment_packet[5] = LowByte(experiment_packet_len - hdr_len);
   experiment_packet[6] = HighByte(experiment_packet_len - hdr_len);
   experiment_packet[7] = INSTR_STATUS;
-  experiment_packet[8] = err_byte; 
+  experiment_packet[8] = err_state; 
  
-  experiment_packet[9]  = (experiment_idx & 0xff000000UL) >> 24; 
-  experiment_packet[10] = (experiment_idx & 0x00ff0000UL) >> 16; 
-  experiment_packet[11] = (experiment_idx & 0x0000ff00UL) >> 8; 
-  experiment_packet[12] = (experiment_idx & 0x000000ffUL)     ; 
-
-  // unsigned char *idx_ptr = (unsigned char*)&experiment_idx;
-  // experiment_packet[9]  = idx_ptr[0]; 
-  // experiment_packet[10] = idx_ptr[1]; 
-  // experiment_packet[11] = idx_ptr[2];
-  // experiment_packet[12] = idx_ptr[3];
+  for (size_t exp_idx = 0; exp_idx < exp_record_len; exp_idx++) {
+    experiment_packet[9+exp_idx] = exp_line[exp_idx];
+  }
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, experiment_packet, experiment_packet_len - 2);
-  experiment_packet[13] = LowByte(crc_value);
-  experiment_packet[14] = HighByte(crc_value);
+  experiment_packet[9+exp_record_len] = LowByte(crc_value);
+  experiment_packet[10+exp_record_len] = HighByte(crc_value);
 
   SendPacket(experiment_packet, experiment_packet_len);
 }
-*/

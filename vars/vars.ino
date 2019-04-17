@@ -65,16 +65,17 @@ unsigned long time;
 boolean new_data; 
 size_t packet_len; 
 size_t ndx;
-int toggle;
 bool send_ack_packet; 
 uint32_t experiment_idx;
 unsigned char err_state; 
 
 const size_t hdr_len = 7; 
 const int num_chars = 64;             // TODO(acauligi): max # of bytes?
+const int exp_record_len = 35;
 const size_t hdr_const_byte_len = 5;
 unsigned char hdr_buffer[hdr_const_byte_len];
 unsigned char received_packet[num_chars];
+unsigned char exp_line[exp_record_len];
 const int LED_HIGH = 80;
 
 // Assigning the PWMServoDriver I2C address
@@ -88,12 +89,21 @@ const int overtemperature_trigger = 45;     // Celsius
 // File object for SD cart write
 File my_file;
 int chip_select = 10;
-String fn = "card_testing.txt";
+uint32_t record_num; 
+bool file_is_open = false;
+const int file_open_attempts = 10;
 
 //Creating VL6180X distance sensor object
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range;
-const uint8_t vl_range_trigger = 100; // TODO(acauligi): determine units and appropriate value 
+uint8_t last_vl_range;
+uint8_t last_vl_range_time;
+// sensor measurement range is really 5-100mm, but margin added
+const uint8_t vl_range_min = 10;    // [mm] 
+const uint8_t vl_range_max = 95;   // [mm] 
+const int n_vel_buf = 50;   // number of values stored in distance sensor buffer
+float vel_buf[n_vel_buf];
+size_t vel_buf_idx = 0;
 
 //Assigning the INA219 current sensor I2C address
 Adafruit_INA219 ina219_A;

@@ -3,7 +3,8 @@ void WriteToCard() {
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  my_file = SD.open("test.txt", FILE_WRITE);
+  String fn = String(experiment_idx + ".txt");
+  my_file = SD.open(fn, FILE_WRITE);
 
   // if the file opened okay, write to it:
   if (my_file) {
@@ -74,17 +75,18 @@ void WriteToCard() {
     Serial.println("done.");
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+    Serial.println("error opening experiment file");
   }
 }
 
 // TODO(acauligi)
-void ReadFromCard() {
+void ReadRecordFromCard() {
   /*
   // re-open the file for reading:
-  my_file = SD.open("test.txt");
+  String fn = String(experiment_idx + ".txt");
+  my_file = SD.open(fn);
   if (my_file) {
-    Serial.println("test.txt:");
+    Serial.println("experiment file:");
 
     // read from the file until there's nothing else in it:
     while (my_file.available()) {
@@ -94,7 +96,61 @@ void ReadFromCard() {
     my_file.close();
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+    Serial.println("error opening experiment file");
   }
   */
+
+  /* 
+  int record_num = 0;
+  String fn = String(experiment_idx + ".txt");
+  my_file = SD.open(fn);
+  if (my_file) {
+    Serial.println("experiment file:");
+
+    // read from the file until there's nothing else in it:
+    while (my_file.available()) {
+      String list = my_file.readStringUntil('\r');
+      record_num++;
+      if (record_num==record_number_of_interest) {
+        // DO SOMETHING
+      }
+    }
+    // close the file:
+    my_file.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening experiment file");
+  }
+  */
+
+  String fn = String(experiment_idx + ".txt");
+  my_file = SD.open(fn);
+  if (my_file) {
+    my_file.seek(0);
+    char cr;
+
+    for (unsigned int i = 0; i < (record_num-1);) {
+      cr = my_file.read();
+      if (cr == '\n') {
+        i++;
+      }
+    }
+
+    // Now at correct line
+    unsigned int exp_line_idx = 0;
+    cr = my_file.read();
+    while (true) {
+      exp_line[exp_line_idx] = cr;
+      cr = my_file.read();
+      if (cr == '\n') {
+        break;
+      }
+    }
+
+    // close the file:
+    my_file.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening experiment file");
+  }
 }

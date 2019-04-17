@@ -6,6 +6,11 @@ unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
+uint32_t ToUInt32(char* ptr) {
+  uint32_t new_value = ((uint32_t)(ptr[0])<<24) | ((uint32_t)(ptr[1])<<16) | ((uint32_t)(ptr[2])<<8) | ((uint32_t)(ptr[3])); 
+  return new_value;
+}
+
 // Reset state of received_packet
 void ResetState() {
   new_data = false;
@@ -228,13 +233,11 @@ void setup() {
   automatic_mode_enable = false;
   experiment_in_progress = false;
   overtemperature_flag = false;
-  experiment_idx = 0; 
 
   // Global variables
   new_data = false;
   packet_len = hdr_len;
   ndx = 5;
-  toggle = 1;
   send_ack_packet = false;
   err_state = 0x00;
 
@@ -254,6 +257,10 @@ void setup() {
   
   // Initialize the VL6180X
   vl.begin();
+  for (size_t k = 0; k < n_vel_buf; k++) {
+    // fill sensor measurement buffer with null values
+    vel_buf[k] = NULL;  // TODO(acauligi): or 0x00?
+  }
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
@@ -290,6 +297,10 @@ void loop() {
   IncomingData();
   ProcessData();
   Automatic();
+
+  if (experiment_in_progress) {
+    WriteToCard();
+  }
 
   // OpenGripper();
   // delay(3000);
