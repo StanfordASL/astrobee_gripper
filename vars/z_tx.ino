@@ -8,51 +8,109 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
   return ERR_BYTE;
 }
 
+void ConstructExperimentRecordLine() {
+  // TIME: running 16-bit unsigned counter since Teensy power-on
+  cur_time = millis();
+  // TODO(acauligi): how to write the numbers in characters?
+  record_line[0] = 0x00; 
+  record_line[1] = (char)((cur_time & 0xff000000UL) >> 24);
+  record_line[2] = (char)((cur_time & 0x00ff0000UL) >> 16);
+  record_line[3] = (char)((cur_time & 0x0000ff00UL) >> 8); 
+  record_line[4] = (char)((cur_time & 0x000000ffUL)     ); 
+
+  record_line[5] = ',';
+
+  record_line[6] = adhesive_engage ? 'E' : 'D';
+
+  record_line[7] = wrist_lock ? 'L' : 'U';
+
+  record_line[8] = automatic_mode_enable ? 'A' : '*';
+
+  record_line[9] = ',';
+
+  // SRV_L1_CURR
+  record_line[10] = (char)(((unsigned long)current_mA_A & 0xff000000UL) >> 24);
+  record_line[11] = (char)(((unsigned long)current_mA_A & 0x00ff0000UL) >> 16);
+  record_line[12] = (char)(((unsigned long)current_mA_A & 0x0000ff00UL) >> 8); 
+  record_line[13] = (char)(((unsigned long)current_mA_A & 0x000000ffUL)     );
+
+  record_line[14] = ',';
+
+  // SRV_L2_CURR
+  record_line[15] = (char)(((unsigned long)current_mA_B & 0xff000000UL) >> 24);
+  record_line[16] = (char)(((unsigned long)current_mA_B & 0x00ff0000UL) >> 16);
+  record_line[17] = (char)(((unsigned long)current_mA_B & 0x0000ff00UL) >> 8); 
+  record_line[18] = (char)(((unsigned long)current_mA_B & 0x000000ffUL)     ); 
+
+  record_line[19] = ',';
+
+  // SRV_R_CURR 
+  record_line[20] = (char)(((unsigned long)current_mA_C & 0xff000000UL) >> 24);
+  record_line[21] = (char)(((unsigned long)current_mA_C & 0x00ff0000UL) >> 16);
+  record_line[22] = (char)(((unsigned long)current_mA_C & 0x0000ff00UL) >> 8); 
+  record_line[23] = (char)(((unsigned long)current_mA_C & 0x000000ffUL)     ); 
+
+  record_line[24] = ',';
+
+  // SRV_W_CURR 
+  record_line[25] = (char)(((unsigned long)current_mA_D & 0xff000000UL) >> 24);
+  record_line[26] = (char)(((unsigned long)current_mA_D & 0x00ff0000UL) >> 16);
+  record_line[27] = (char)(((unsigned long)current_mA_D & 0x0000ff00UL) >> 8); 
+  record_line[28] = (char)(((unsigned long)current_mA_D & 0x000000ffUL)     ); 
+
+  record_line[29] = ',';
+
+  // TOF
+  // TODO(acauligi): what to do when ToF sensor reads faulty measurement?
+  record_line[30] = 0x00;
+  record_line[31] = 0x00;
+  record_line[32] = vl_range;
+  
+  record_line[33] = ',';
+  
+  record_line[34] = overtemperature_flag ? '*' : '-';
+}
+
 void SendErrorPacket(char ERR_NUMBER) {
   err_state = ConstructErrorByte(ERR_NUMBER);
 
-  size_t err_packet_len = 11;
+  size_t err_packet_len = min_tx_len;
   unsigned char err_packet[err_packet_len];
   err_packet[0] = 0xff;
   err_packet[1] = 0xff;
   err_packet[2] = 0xfd;
   err_packet[3] = 0x00;
   err_packet[4] = TARGET_GRIPPER;
-  err_packet[5] = LowByte(err_packet_len - hdr_len);
-  err_packet[6] = HighByte(err_packet_len - hdr_len);
+  err_packet[5] = LowByte(err_packet_len - lead_in_len);
+  err_packet[6] = HighByte(err_packet_len - lead_in_len);
   err_packet[7] = INSTR_STATUS;
   err_packet[8] = err_state; 
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, err_packet, err_packet_len - 2);
-  err_packet[9] = LowByte(crc_value);
-  err_packet[10] = HighByte(crc_value);
+  err_packet[err_packet_len-2] = LowByte(crc_value);
+  err_packet[err_packet_len-1] = HighByte(crc_value);
 
   SendPacket(err_packet, err_packet_len);
 }
 
 void SendPingPacket() {
-  size_t ping_packet_len = 10; 
+  size_t ping_packet_len = min_tx_len; 
   unsigned char ping_packet[ping_packet_len];
   ping_packet[0] = 0xff;
   ping_packet[1] = 0xff;
   ping_packet[2] = 0xfd;
   ping_packet[3] = 0x00;
   ping_packet[4] = TARGET_GRIPPER;
-  ping_packet[5] = LowByte(ping_packet_len - hdr_len);
-  ping_packet[6] = HighByte(ping_packet_len - hdr_len);
+  ping_packet[5] = LowByte(ping_packet_len - lead_in_len);
+  ping_packet[6] = HighByte(ping_packet_len - lead_in_len);
   ping_packet[7] = INSTR_STATUS;
   ping_packet[8] = err_state;
 
-  // dummy status packet parameters
-  // ping_packet[9]  = 0x01;
-  // ping_packet[10] = 0x02;
-  // ping_packet[11] = 0x03;
-
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, ping_packet, ping_packet_len - 2);
-  ping_packet[9] = LowByte(crc_value);
-  ping_packet[10] = HighByte(crc_value);
+  ping_packet[ping_packet_len-2] = LowByte(crc_value);
+  ping_packet[ping_packet_len-1] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
 }
@@ -62,15 +120,15 @@ void SendAcknowledgePacket() {
 }
 
 void SendStatusPacket() {
-  size_t status_packet_len = 13; 
+  size_t status_packet_len = min_tx_len + status_packet_data_len; 
   unsigned char status_packet[status_packet_len];
   status_packet[0] = 0xff;
   status_packet[1] = 0xff;
   status_packet[2] = 0xfd;
   status_packet[3] = 0x00;
   status_packet[4] = TARGET_GRIPPER;
-  status_packet[5] = LowByte(status_packet_len - hdr_len);
-  status_packet[6] = HighByte(status_packet_len - hdr_len);
+  status_packet[5] = LowByte(status_packet_len - lead_in_len);
+  status_packet[6] = HighByte(status_packet_len - lead_in_len);
   status_packet[7] = INSTR_STATUS;
   status_packet[8] = err_state; 
 
@@ -84,59 +142,66 @@ void SendStatusPacket() {
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, status_packet, status_packet_len - 2);
-  status_packet[11] = LowByte(crc_value);
-  status_packet[12] = HighByte(crc_value);
+  status_packet[status_packet_len-2] = LowByte(crc_value);
+  status_packet[status_packet_len-1] = HighByte(crc_value);
 
   SendPacket(status_packet, status_packet_len);
 }  
 
-/*
 void SendRecordPacket() {
-  size_t record_packet_len = 46; 
+  size_t record_packet_len = min_tx_len + record_packet_data_len; 
   unsigned char record_packet[record_packet_len];
   record_packet[0] = 0xff;
   record_packet[1] = 0xff;
   record_packet[2] = 0xfd;
   record_packet[3] = 0x00;
   record_packet[4] = TARGET_GRIPPER;
-  record_packet[5] = LowByte(record_packet_len - hdr_len);
-  record_packet[6] = HighByte(record_packet_len - hdr_len);
+  record_packet[5] = LowByte(record_packet_len - lead_in_len);
+  record_packet[6] = HighByte(record_packet_len - lead_in_len);
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_state; 
-  size_t txIdx = 9;
 
-
+  for (size_t record_idx = 0; record_idx < record_packet_data_len; record_idx++) {
+    record_packet[9+record_idx] = record_line[record_idx];
+  }
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, record_packet, record_packet_len - 2);
-  record_packet[43] = LowByte(crc_value);
-  record_packet[44] = HighByte(crc_value);
+  record_packet[record_packet_len-2] = LowByte(crc_value);
+  record_packet[record_packet_len-1] = HighByte(crc_value);
 
   SendPacket(record_packet, record_packet_len);
 }
-*/
 
 void SendExperimentPacket() {
-  size_t experiment_packet_len = 9 + exp_record_len + 2;  
+  size_t experiment_packet_len = min_tx_len + experiment_packet_data_len; 
   unsigned char experiment_packet[experiment_packet_len];
   experiment_packet[0] = 0xff;
   experiment_packet[1] = 0xff;
   experiment_packet[2] = 0xfd;
   experiment_packet[3] = 0x00;
   experiment_packet[4] = TARGET_GRIPPER;
-  experiment_packet[5] = LowByte(experiment_packet_len - hdr_len);
-  experiment_packet[6] = HighByte(experiment_packet_len - hdr_len);
+  experiment_packet[5] = LowByte(experiment_packet_len - lead_in_len);
+  experiment_packet[6] = HighByte(experiment_packet_len - lead_in_len);
   experiment_packet[7] = INSTR_STATUS;
   experiment_packet[8] = err_state; 
- 
-  for (size_t exp_idx = 0; exp_idx < exp_record_len; exp_idx++) {
-    experiment_packet[9+exp_idx] = exp_line[exp_idx];
+
+  if (experiment_in_progress) {
+    experiment_packet[9]  = (char)(((unsigned long)experiment_idx & 0xff000000UL) >> 24);
+    experiment_packet[10] = (char)(((unsigned long)experiment_idx & 0x00ff0000UL) >> 16);
+    experiment_packet[11] = (char)(((unsigned long)experiment_idx & 0x0000ff00UL) >> 8); 
+    experiment_packet[12] = (char)(((unsigned long)experiment_idx & 0x000000ffUL)     );
+  } else {
+    experiment_packet[9]  = 0x00; 
+    experiment_packet[10] = 0x00;
+    experiment_packet[11] = 0x00;
+    experiment_packet[12] = 0x00;
   }
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, experiment_packet, experiment_packet_len - 2);
-  experiment_packet[9+exp_record_len] = LowByte(crc_value);
-  experiment_packet[10+exp_record_len] = HighByte(crc_value);
+  experiment_packet[experiment_packet_len-2]   = LowByte(crc_value);
+  experiment_packet[experiment_packet_len-1] = HighByte(crc_value);
 
   SendPacket(experiment_packet, experiment_packet_len);
 }

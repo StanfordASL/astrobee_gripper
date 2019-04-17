@@ -18,7 +18,7 @@ void ResetState() {
   memset(received_packet, 0, sizeof(received_packet));
   memset(hdr_buffer, 0, sizeof(hdr_buffer));
 
-  packet_len = hdr_len;
+  packet_len = lead_in_len;
   ndx = 5;
   send_ack_packet = false;
 }
@@ -35,12 +35,12 @@ void IncomingData() {
         (hdr_buffer[3] != 0x00) ||
         (hdr_buffer[4] != TARGET_GRIPPER)) {
       // Overwrite existing header buffer if invalid
-      for (size_t k = 0; k < hdr_const_byte_len - 1; k++) {
+      for (size_t k = 0; k < packet_const_byte_len - 1; k++) {
         hdr_buffer[k] = hdr_buffer[k + 1];
       }
-      hdr_buffer[hdr_const_byte_len - 1] = rc;
+      hdr_buffer[packet_const_byte_len - 1] = rc;
     } else {
-      for (size_t k = 0; k < hdr_const_byte_len; k++) received_packet[k] = hdr_buffer[k];
+      for (size_t k = 0; k < packet_const_byte_len; k++) received_packet[k] = hdr_buffer[k];
       received_packet[ndx] = rc;
 
       if (ndx == 6) {
@@ -218,9 +218,6 @@ void UpdateGripperState() {
   current_mA_B = ina219_B.getCurrent_mA();
   current_mA_C = ina219_C.getCurrent_mA();
   current_mA_D = ina219_D.getCurrent_mA();
-
-  // TODO(acauligi)
-  // overtemperature_flag; 
 }
 
 void setup() {
@@ -236,7 +233,7 @@ void setup() {
 
   // Global variables
   new_data = false;
-  packet_len = hdr_len;
+  packet_len = lead_in_len;
   ndx = 5;
   send_ack_packet = false;
   err_state = 0x00;
@@ -248,12 +245,12 @@ void setup() {
   pinMode(21, OUTPUT);
   pinMode(22, OUTPUT);
   pinMode(23, OUTPUT);
-  analogWrite(4, 0);
-  analogWrite(5, 0);
-  analogWrite(6, LED_HIGH);
-  analogWrite(21, 0);
-  analogWrite(22, 0);
-  analogWrite(23, LED_HIGH);
+  analogWrite(4, LED_HIGH);        // RED
+  analogWrite(5, LED_HIGH);        // GREEN
+  analogWrite(6, LED_HIGH);        // BLUE
+  analogWrite(21, LED_HIGH);        // BLUE
+  analogWrite(22, LED_HIGH);        // GREEN
+  analogWrite(23, LED_HIGH); // RED
   
   // Initialize the VL6180X
   vl.begin();

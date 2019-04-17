@@ -162,6 +162,8 @@ void CloseExperiment() {
     return;
   }
 
+  // TODO(acauligi): assign experiment_idx=0?
+
   my_file.close();
   experiment_in_progress = false;
   file_is_open = false;
@@ -189,7 +191,7 @@ void Automatic() {
         vel_buf_idx = n_vel_buf-1;
       }
 
-      float cur_time = millis();
+      cur_time = millis();
       vel_buf[vel_buf_idx] = (vl_range-last_vl_range) / (cur_time - last_vl_range_time);
       last_vl_range = vl_range;
       last_vl_range_time = cur_time;
@@ -214,10 +216,4 @@ void Automatic() {
     delay(dh);
     CloseGripper();
   }
-
-  // if (vl_range < vl_range_trigger && !adhesive_engage && !wrist_lock) {
-  //   OpenGripper();
-  // } else if (vl_range > vl_range_trigger && adhesive_engage && wrist_lock) {
-  //   CloseGripper();
-  // }
 }

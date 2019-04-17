@@ -61,7 +61,7 @@ bool experiment_in_progress;
 bool overtemperature_flag;
 
 // Global variables
-unsigned long time;
+unsigned long cur_time; 
 boolean new_data; 
 size_t packet_len; 
 size_t ndx;
@@ -69,43 +69,54 @@ bool send_ack_packet;
 uint32_t experiment_idx;
 unsigned char err_state; 
 
-const size_t hdr_len = 7; 
+const size_t hdr_const_byte_len = 2;              // HDR = [0xFF, 0xFF, 0xFD] 
+const size_t reserved_const_byte_len = 2;         // RESERVED = [0x00] 
+const size_t id_const_byte_len = 1;               // ID = [TARGET_GRIPPER] 
+const size_t packet_const_byte_len = hdr_const_byte_len + reserved_const_byte_len+id_const_byte_len;  // used to identify if packet is for gripper
+                                                  
+const size_t lead_in_len = packet_const_byte_len + 2; // [HDR, RESERVED, ID, LEN_L, LEN_H]
+const size_t crc_len = 2;                         // [CRC_L, CRC_H]
+const size_t min_rx_len = lead_in_len + crc_len + 1;  // [LEAD_IN, INSTR, (DATA), CRC]
+const size_t min_tx_len = lead_in_len + crc_len + 2;  // [LEAD_IN, INSTR, ERR, (DATA), CRC]
+
+const size_t status_packet_data_len = 2;
+const size_t record_packet_data_len = 35;
+const size_t experiment_packet_data_len = 4;
+
 const int num_chars = 64;             // TODO(acauligi): max # of bytes?
-const int exp_record_len = 35;
-const size_t hdr_const_byte_len = 5;
-unsigned char hdr_buffer[hdr_const_byte_len];
+unsigned char hdr_buffer[packet_const_byte_len];
 unsigned char received_packet[num_chars];
-unsigned char exp_line[exp_record_len];
-const int LED_HIGH = 80;
+unsigned char record_line[record_packet_data_len];
+const int LED_HIGH = 40;
 
 // Assigning the PWMServoDriver I2C address
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
 
-// Declaring wrist lock servo
+// Instantiate wrist lock servo
 Servo wrist_lock_servo;
 const int wrist_delay = 20;                 //setting wrist lock delay timer
 const int overtemperature_trigger = 45;     // Celsius
 
-// File object for SD cart write
+// Instantiate objects for SD card r/w
 File my_file;
 int chip_select = 10;
 uint32_t record_num; 
 bool file_is_open = false;
 const int file_open_attempts = 10;
 
-//Creating VL6180X distance sensor object
+// Instantiate VL6180X distance sensor object
+// sensor measurement range is really 5-100mm, but margin added
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range;
 uint8_t last_vl_range;
 uint8_t last_vl_range_time;
-// sensor measurement range is really 5-100mm, but margin added
 const uint8_t vl_range_min = 10;    // [mm] 
 const uint8_t vl_range_max = 95;   // [mm] 
 const int n_vel_buf = 50;   // number of values stored in distance sensor buffer
 float vel_buf[n_vel_buf];
 size_t vel_buf_idx = 0;
 
-//Assigning the INA219 current sensor I2C address
+// Instantiating INA219 current sensors I2C address
 Adafruit_INA219 ina219_A;
 Adafruit_INA219 ina219_B(0x41);
 Adafruit_INA219 ina219_C(0x44);
