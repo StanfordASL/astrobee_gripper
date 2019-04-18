@@ -67,6 +67,7 @@ void DisableAuto() {
 void ToggleAuto() {
   if (automatic_mode_enable) {
     automatic_mode_enable = false;
+  // TODO(acauligi): if (experiment_in_progress || file_is_open), should something be done?
   } else {
     automatic_mode_enable = true;
   }
@@ -81,7 +82,7 @@ void Mark() {
   }
 
   // TODO(acauligi): better way to check for this?
-  if (packet_len < 14) {
+  if (packet_len < min_rx_len+experiment_packet_data_len) {
     return;
   }
   experiment_idx = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
@@ -103,10 +104,14 @@ void OpenExperiment() {
     Serial.println("Experiment already in session! Cannot Open one.");
     // TODO(acauligi): Send error byte?
     return;
+  } else if (file_is_open) {
+    Serial.println("File already open! Cannot Open one.");
+    // TODO(acauligi): Send error byte?
+    return;
   }
 
   // TODO(acauligi): better way to check for this?
-  if (packet_len < 14) {
+  if (packet_len < min_rx_len+experiment_packet_data_len) {
     return;
   }
   experiment_idx = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
@@ -124,7 +129,7 @@ void OpenExperiment() {
 
 void NextRecord() {
   // TODO(acauligi): better way to check for this?
-  if (packet_len < 11) {
+  if (packet_len < min_tx_len+1) {
     return;
   }
 
@@ -141,15 +146,12 @@ void NextRecord() {
 }
 
 void SeekRecord() {
-  // TODO(acauligi): better way to check for this?
-  if (packet_len < 14) {
+  if (packet_len < min_rx_len+experiment_packet_data_len) {
     return;
   }
   
   if (file_is_open && !experiment_in_progress) { 
     record_num = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
-    // ReadRecordFromCard();
-    // SendExperimentPacket();
   } else {
     // TODO(acauligi): Send error byte?
   }
@@ -178,10 +180,10 @@ void Automatic() {
   }
 
   // TODO(acauligi): change buffer into circular buffer
-  if (vl_range < vl_range_max && vl_range > vl_range_min) {
+  if (vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm) {
     if(vel_buf_idx==0) {
-      last_vl_range = vl_range;
-      last_vl_range_time = millis(); 
+      last_vl_range_mm = vl_range_mm;
+      last_vl_range_time_ms = millis(); 
     } else {
       if (vel_buf_idx==n_vel_buf) {
         // Buffer is full
@@ -191,28 +193,28 @@ void Automatic() {
         vel_buf_idx = n_vel_buf-1;
       }
 
-      cur_time = millis();
-      vel_buf[vel_buf_idx] = (vl_range-last_vl_range) / (cur_time - last_vl_range_time);
-      last_vl_range = vl_range;
-      last_vl_range_time = cur_time;
+      cur_time_ms = millis();
+      vel_buf[vel_buf_idx] = (vl_range_mm-last_vl_range_mm) / (cur_time_ms - last_vl_range_time_ms);
+      last_vl_range_mm = vl_range_mm;
+      last_vl_range_time_ms = cur_time_ms;
     }
     vel_buf_idx++;
-  } else if (vl_range < vl_range_min) {
+  } else if (vl_range_mm < vl_range_min_mm) {
     // calculate average speed from values in buffer
-    float mean_vel = 0;
+    float mean_vel_mps = 0;
     if (!vel_buf[0]) {
       return;
     } else {
       // TODO(acauligi): double check!
-      mean_vel = vel_buf[0];
+      mean_vel_mps = vel_buf[0];
       size_t k = 1;
       while (k<n_vel_buf && !vel_buf[k]) {
-        mean_vel = (k*mean_vel + vel_buf[k]) / (k+1);
+        mean_vel_mps = (k*mean_vel_mps + vel_buf[k]) / (k+1);
         k++;
       }
     }
 
-    float dh = vl_range / mean_vel; 
+    float dh = vl_range_mm / mean_vel_mps; 
     delay(dh);
     CloseGripper();
   }

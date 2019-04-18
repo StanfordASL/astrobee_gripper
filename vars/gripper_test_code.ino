@@ -178,7 +178,7 @@ void ProcessData() {
 bool ReadToF() {
   // See: https://github.com/adafruit/Adafruit_VL6180X/tree/master/examples/vl6180x
 
-  vl_range = vl.readRange();
+  vl_range_mm = vl.readRange();
   uint8_t status = vl.readRangeStatus();
   if  ((status >= VL6180X_ERROR_SYSERR_1) && (status <= VL6180X_ERROR_SYSERR_5)) {
     Serial.println("System error");

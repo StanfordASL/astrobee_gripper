@@ -1,6 +1,13 @@
 // Send packet using UART
 void SendPacket(unsigned char* packet, size_t len) {
+  analogWrite(21, 0);        // BLUE
+  analogWrite(22, 0);        // GREEN
+  analogWrite(23, 0); // RED
   Serial1.write(packet, len);
+  delay(20);
+  analogWrite(21, LED_HIGH);        // BLUE
+  analogWrite(22, LED_HIGH);        // GREEN
+  analogWrite(23, LED_HIGH); // RED
 }
 
 unsigned char ConstructErrorByte(char ERR_NUMBER) {
@@ -10,13 +17,13 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
 
 void ConstructExperimentRecordLine() {
   // TIME: running 16-bit unsigned counter since Teensy power-on
-  cur_time = millis();
+  cur_time_ms = millis();
   // TODO(acauligi): how to write the numbers in characters?
   record_line[0] = 0x00; 
-  record_line[1] = (char)((cur_time & 0xff000000UL) >> 24);
-  record_line[2] = (char)((cur_time & 0x00ff0000UL) >> 16);
-  record_line[3] = (char)((cur_time & 0x0000ff00UL) >> 8); 
-  record_line[4] = (char)((cur_time & 0x000000ffUL)     ); 
+  record_line[1] = (char)((cur_time_ms & 0xff000000UL) >> 24);
+  record_line[2] = (char)((cur_time_ms & 0x00ff0000UL) >> 16);
+  record_line[3] = (char)((cur_time_ms & 0x0000ff00UL) >> 8); 
+  record_line[4] = (char)((cur_time_ms & 0x000000ffUL)     ); 
 
   record_line[5] = ',';
 
@@ -64,7 +71,7 @@ void ConstructExperimentRecordLine() {
   // TODO(acauligi): what to do when ToF sensor reads faulty measurement?
   record_line[30] = 0x00;
   record_line[31] = 0x00;
-  record_line[32] = vl_range;
+  record_line[32] = vl_range_mm;
   
   record_line[33] = ',';
   

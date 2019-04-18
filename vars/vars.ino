@@ -61,7 +61,7 @@ bool experiment_in_progress;
 bool overtemperature_flag;
 
 // Global variables
-unsigned long cur_time; 
+unsigned long cur_time_ms; 
 boolean new_data; 
 size_t packet_len; 
 size_t ndx;
@@ -107,11 +107,11 @@ const int file_open_attempts = 10;
 // Instantiate VL6180X distance sensor object
 // sensor measurement range is really 5-100mm, but margin added
 Adafruit_VL6180X vl = Adafruit_VL6180X();
-uint8_t vl_range;
-uint8_t last_vl_range;
-uint8_t last_vl_range_time;
-const uint8_t vl_range_min = 10;    // [mm] 
-const uint8_t vl_range_max = 95;   // [mm] 
+uint8_t vl_range_mm;
+uint8_t last_vl_range_mm;
+uint8_t last_vl_range_time_ms;
+const uint8_t vl_range_min_mm = 10;    // [mm] 
+const uint8_t vl_range_max_mm = 95;   // [mm] 
 const int n_vel_buf = 50;   // number of values stored in distance sensor buffer
 float vel_buf[n_vel_buf];
 size_t vel_buf_idx = 0;
