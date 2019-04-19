@@ -85,7 +85,8 @@ void Mark() {
   if (packet_len < min_rx_len+experiment_packet_data_len) {
     return;
   }
-  experiment_idx = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
+
+  experiment_idx = ToUInt32(received_packet+lead_in_len+1);
 
   String fn = String(experiment_idx + ".txt");
   for (int i = 0; i < file_open_attempts; i++) {
@@ -114,7 +115,8 @@ void OpenExperiment() {
   if (packet_len < min_rx_len+experiment_packet_data_len) {
     return;
   }
-  experiment_idx = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
+
+  experiment_idx = ToUInt32(received_packet+lead_in_len+1);
   
   String fn = String(experiment_idx + ".txt");
   for (int i = 0; i < file_open_attempts; i++) {

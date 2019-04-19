@@ -6,13 +6,14 @@ unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
-uint32_t ToUInt32(char* ptr) {
+uint32_t ToUInt32(unsigned char* ptr) {
   uint32_t new_value = ((uint32_t)(ptr[0])<<24) | ((uint32_t)(ptr[1])<<16) | ((uint32_t)(ptr[2])<<8) | ((uint32_t)(ptr[3])); 
   return new_value;
 }
 
 // Reset state of received_packet
 void ResetState() {
+  // TODO(acauligi): update with all new variables that have been created
   new_data = false;
 
   memset(received_packet, 0, sizeof(received_packet));
@@ -79,100 +80,86 @@ void IncomingData() {
 }
 
 void ProcessData() {
-  if (new_data == true) {
-    // for (size_t k = 0; k < packet_len; k++) Serial.print((char)(received_packet[k]));
-    // Serial.println();
-    // Serial.println(millis());
+  char instr = received_packet[7];
+  char addr = ((received_packet[9] << 8) | (received_packet[8]));
 
-    if (send_ack_packet) {
-      // SendPacket(received_packet, packet_len);
-      // TODO(acauligi): send back ack packet with data in write command
-      SendPingPacket();
-      send_ack_packet = false;
-    }
-
-    char instr = received_packet[7];
-    char addr = ((received_packet[9] << 8) | (received_packet[8]));
-    Serial.println(instr, HEX);
-
-    switch (instr) {
-      case INSTR_PING:
-        SendPingPacket();
-
-      case INSTR_READ:
-        switch (addr) {
-          case STATUS:
-            Serial.println("STATUS");
-            // SendStatusPacket(); 
-            break;
-          case RECORD:
-            Serial.println("RECORD");
-            // SendRecordPacket(); 
-            break;
-          case EXPERIMENT:
-            Serial.println("EXPERIMENT");
-            break;
-        }
-
-        break;
-
-      case INSTR_WRITE:
-        switch (addr) {
-          case ADDRESS_OPEN:
-            Serial.println("ADDRESS_OPEN");
-            OpenGripper();
-            break;
-          case ADDRESS_CLOSE:
-            Serial.println("ADDRESS_CLOSE");
-            CloseGripper();
-            break;
-          case ADDRESS_TOGGLE_AUTO:
-            Serial.println("ADDRESS_TOGGLE_AUTO");
-            ToggleAuto();
-            break;
-          case ADDRESS_MARK:
-            Serial.println("ADDRESS_MARK");
-            break;
-          case ADDRESS_ENGAGE:
-            Serial.println("ADDRESS_ENGAGE");
-            break;
-          case ADDRESS_DISENGAGE:
-            Serial.println("ADDRESS_DISENGAGE");
-            break;
-          case ADDRESS_LOCK:
-            Serial.println("ADDRESS_LOCK");
-            break;
-          case ADDRESS_UNLOCK:
-            Serial.println("ADDRESS_UNLOCK");
-            break;
-          case ADDRESS_ENABLE_AUTO:
-            Serial.println("ADDRESS_ENABLE_AUTO");
-            break;
-          case ADDRESS_DISABLE_AUTO:
-            Serial.println("ADDRESS_DISABLE_AUTO");
-            break;
-          case ADDRESS_OPEN_EXPERIMENT:
-            Serial.println("ADDRESS_OPEN_EXPERIMENT");
-            break;
-          case ADDRESS_NEXT_RECORD:
-            Serial.println("ADDRESS_NEXT_RECORD");
-            break;
-          case ADDRESS_SEEK_RECORD:
-            Serial.println("ADDRESS_SEEK_RECORD");
-            break;
-          case ADDRESS_CLOSE_EXPERIMENT:
-            Serial.println("ADDRESS_CLOSE_EXPERIMENT");
-            break;
-        }
-
-        break;
-
-      default:
-        Serial.println("ERROR PACKET");
-    }
-
-    ResetState();
+  if (send_ack_packet) {
+    SendPingPacket();
+    send_ack_packet = false;
   }
+
+  switch (instr) {
+    case INSTR_PING:
+      SendPingPacket();
+
+    case INSTR_READ:
+      switch (addr) {
+        case STATUS:
+          SendStatusPacket(); 
+          break;
+        case RECORD:
+          SendRecordPacket(); 
+          break;
+        case EXPERIMENT:
+          SendExperimentPacket();
+          break;
+      }
+
+      break;
+
+    case INSTR_WRITE:
+      switch (addr) {
+        case ADDRESS_OPEN:
+          OpenGripper();
+          break;
+        case ADDRESS_CLOSE:
+          CloseGripper();
+          break;
+        case ADDRESS_TOGGLE_AUTO:
+          ToggleAuto();
+          break;
+        case ADDRESS_MARK:
+          Mark();
+          break;
+        case ADDRESS_ENGAGE:
+          Engage();
+          break;
+        case ADDRESS_DISENGAGE:
+          Disengage();
+          break;
+        case ADDRESS_LOCK:
+          Lock();
+          break;
+        case ADDRESS_UNLOCK:
+          Unlock();
+          break;
+        case ADDRESS_ENABLE_AUTO:
+          EnableAuto();
+          break;
+        case ADDRESS_DISABLE_AUTO:
+          DisableAuto();
+          break;
+        case ADDRESS_OPEN_EXPERIMENT:
+          OpenExperiment();
+          break;
+        case ADDRESS_NEXT_RECORD:
+          NextRecord();
+          break;
+        case ADDRESS_SEEK_RECORD:
+          SeekRecord();
+          break;
+        case ADDRESS_CLOSE_EXPERIMENT:
+          CloseExperiment();
+          break;
+      }
+
+      break;
+
+    default:
+      Serial.println("ERROR PACKET");
+  }
+
+  ResetState();
 }
 
 bool ReadToF() {
@@ -292,7 +279,9 @@ void setup() {
 void loop() {
   UpdateGripperState();
   IncomingData();
-  ProcessData();
+  if (new_data) { 
+    ProcessData();
+  }
   Automatic();
 
   if (experiment_in_progress) {

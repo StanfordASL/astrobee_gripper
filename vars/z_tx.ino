@@ -1,13 +1,6 @@
 // Send packet using UART
 void SendPacket(unsigned char* packet, size_t len) {
-  analogWrite(21, 0);        // BLUE
-  analogWrite(22, 0);        // GREEN
-  analogWrite(23, 0); // RED
   Serial1.write(packet, len);
-  delay(20);
-  analogWrite(21, LED_HIGH);        // BLUE
-  analogWrite(22, LED_HIGH);        // GREEN
-  analogWrite(23, LED_HIGH); // RED
 }
 
 unsigned char ConstructErrorByte(char ERR_NUMBER) {
@@ -120,10 +113,13 @@ void SendPingPacket() {
   ping_packet[ping_packet_len-1] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
-}
-
-void SendAcknowledgePacket() {
-  unsigned char ack_packet[packet_len];
+  analogWrite(21, 0);        // BLUE
+  analogWrite(22, 0);        // GREEN
+  analogWrite(23, LED_HIGH); // RED
+  delay(50);
+  analogWrite(21, LED_HIGH);        // BLUE
+  analogWrite(22, LED_HIGH);        // GREEN
+  analogWrite(23, LED_HIGH); // RED
 }
 
 void SendStatusPacket() {
@@ -138,9 +134,10 @@ void SendStatusPacket() {
   status_packet[6] = HighByte(status_packet_len - lead_in_len);
   status_packet[7] = INSTR_STATUS;
   status_packet[8] = err_state; 
+  // status_packet[8] = 0x00; 
 
   // STATUS_H = [TEMP -   -   -   -   -   - EXP]
-  unsigned char STATUS_H = (overtemperature_flag<<7) | experiment_in_progress;
+  unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
   status_packet[9] = STATUS_H;
 
   // STATUS_L = [- - - - AUTO - WRIST ADH] 
@@ -153,6 +150,13 @@ void SendStatusPacket() {
   status_packet[status_packet_len-1] = HighByte(crc_value);
 
   SendPacket(status_packet, status_packet_len);
+  analogWrite(21, 0);        // BLUE
+  analogWrite(22, LED_HIGH);        // GREEN
+  analogWrite(23, 0); // RED
+  delay(100);
+  analogWrite(21, LED_HIGH);        // BLUE
+  analogWrite(22, LED_HIGH);        // GREEN
+  analogWrite(23, LED_HIGH); // RED
 }  
 
 void SendRecordPacket() {
