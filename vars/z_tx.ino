@@ -1,6 +1,22 @@
 // Send packet using UART
 void SendPacket(unsigned char* packet, size_t len) {
-  Serial1.write(packet, len);
+  // Set RS485 direction to OUTPUT
+  digitalWrite(UART1_DIR, HIGH);
+  delayMicroseconds(5);
+
+  // Serial1.write(packet, len);
+  for (size_t k = 0; k < len; k++) {
+    Serial1.write(packet[k]);
+    delayMicroseconds(2);
+  }
+  Serial.flush();
+
+  // delayMicroseconds(1);
+  delay(1);
+
+  // Set RS485 direction to INPUT
+  digitalWrite(UART1_DIR, LOW);
+  delayMicroseconds(5);
 }
 
 unsigned char ConstructErrorByte(char ERR_NUMBER) {
@@ -76,9 +92,9 @@ void SendErrorPacket(char ERR_NUMBER) {
 
   size_t err_packet_len = min_tx_len;
   unsigned char err_packet[err_packet_len];
-  err_packet[0] = 0xff;
-  err_packet[1] = 0xff;
-  err_packet[2] = 0xfd;
+  err_packet[0] = 0xFF;
+  err_packet[1] = 0xFF;
+  err_packet[2] = 0xFD;
   err_packet[3] = 0x00;
   err_packet[4] = TARGET_GRIPPER;
   err_packet[5] = LowByte(err_packet_len - lead_in_len);
@@ -94,12 +110,12 @@ void SendErrorPacket(char ERR_NUMBER) {
   SendPacket(err_packet, err_packet_len);
 }
 
-void SendPingPacket() {
+void SendAckPacket() {
   size_t ping_packet_len = min_tx_len; 
   unsigned char ping_packet[ping_packet_len];
-  ping_packet[0] = 0xff;
-  ping_packet[1] = 0xff;
-  ping_packet[2] = 0xfd;
+  ping_packet[0] = 0xFF;
+  ping_packet[1] = 0xFF;
+  ping_packet[2] = 0xFD;
   ping_packet[3] = 0x00;
   ping_packet[4] = TARGET_GRIPPER;
   ping_packet[5] = LowByte(ping_packet_len - lead_in_len);
@@ -113,21 +129,21 @@ void SendPingPacket() {
   ping_packet[ping_packet_len-1] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
-  analogWrite(21, 0);        // BLUE
-  analogWrite(22, 0);        // GREEN
-  analogWrite(23, LED_HIGH); // RED
-  delay(50);
-  analogWrite(21, LED_HIGH);        // BLUE
-  analogWrite(22, LED_HIGH);        // GREEN
-  analogWrite(23, LED_HIGH); // RED
+//  analogWrite(LED1_R, LED_HIGH);
+//  analogWrite(LED1_G, 0);
+//  analogWrite(LED1_B, 0);
+//  delay(100);
+//  analogWrite(LED1_R, LED_HIGH);
+//  analogWrite(LED1_G, LED_HIGH);
+//  analogWrite(LED1_B, LED_HIGH);
 }
 
 void SendStatusPacket() {
   size_t status_packet_len = min_tx_len + status_packet_data_len; 
   unsigned char status_packet[status_packet_len];
-  status_packet[0] = 0xff;
-  status_packet[1] = 0xff;
-  status_packet[2] = 0xfd;
+  status_packet[0] = 0xFF;
+  status_packet[1] = 0xFF;
+  status_packet[2] = 0xFD;
   status_packet[3] = 0x00;
   status_packet[4] = TARGET_GRIPPER;
   status_packet[5] = LowByte(status_packet_len - lead_in_len);
@@ -150,21 +166,21 @@ void SendStatusPacket() {
   status_packet[status_packet_len-1] = HighByte(crc_value);
 
   SendPacket(status_packet, status_packet_len);
-  analogWrite(21, 0);        // BLUE
-  analogWrite(22, LED_HIGH);        // GREEN
-  analogWrite(23, 0); // RED
-  delay(100);
-  analogWrite(21, LED_HIGH);        // BLUE
-  analogWrite(22, LED_HIGH);        // GREEN
-  analogWrite(23, LED_HIGH); // RED
+//  analogWrite(LED1_R, 0);
+//  analogWrite(LED1_G, LED_HIGH);
+//  analogWrite(LED1_B, 0);
+//  delay(100);
+//  analogWrite(LED1_R, LED_HIGH);
+//  analogWrite(LED1_G, LED_HIGH);
+//  analogWrite(LED1_B, LED_HIGH);
 }  
 
 void SendRecordPacket() {
   size_t record_packet_len = min_tx_len + record_packet_data_len; 
   unsigned char record_packet[record_packet_len];
-  record_packet[0] = 0xff;
-  record_packet[1] = 0xff;
-  record_packet[2] = 0xfd;
+  record_packet[0] = 0xFF;
+  record_packet[1] = 0xFF;
+  record_packet[2] = 0xFD;
   record_packet[3] = 0x00;
   record_packet[4] = TARGET_GRIPPER;
   record_packet[5] = LowByte(record_packet_len - lead_in_len);
@@ -187,9 +203,9 @@ void SendRecordPacket() {
 void SendExperimentPacket() {
   size_t experiment_packet_len = min_tx_len + experiment_packet_data_len; 
   unsigned char experiment_packet[experiment_packet_len];
-  experiment_packet[0] = 0xff;
-  experiment_packet[1] = 0xff;
-  experiment_packet[2] = 0xfd;
+  experiment_packet[0] = 0xFF;
+  experiment_packet[1] = 0xFF;
+  experiment_packet[2] = 0xFD;
   experiment_packet[3] = 0x00;
   experiment_packet[4] = TARGET_GRIPPER;
   experiment_packet[5] = LowByte(experiment_packet_len - lead_in_len);

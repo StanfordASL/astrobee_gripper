@@ -2,18 +2,18 @@ void OpenGripper() {
   Disengage();
   delay(50);
   Unlock();
-  analogWrite(4, 0);
-  analogWrite(5, LED_HIGH);
-  analogWrite(6, 0);
+  analogWrite(LED2_R, 0);
+  analogWrite(LED2_G, LED_HIGH);
+  analogWrite(LED2_B, 0);
 }
 
 void CloseGripper() {
   Engage();
   delay(50);
   Lock();
-  analogWrite(4, LED_HIGH);
-  analogWrite(5, 0);
-  analogWrite(6, 0);
+  analogWrite(LED2_R, LED_HIGH);
+  analogWrite(LED2_G, 0);
+  analogWrite(LED2_B, 0);
 }
 
 void Engage() {

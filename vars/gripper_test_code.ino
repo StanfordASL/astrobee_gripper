@@ -17,7 +17,7 @@ void ResetState() {
   new_data = false;
 
   memset(received_packet, 0, sizeof(received_packet));
-  memset(hdr_buffer, 0, sizeof(hdr_buffer));
+  memset(const_byte_buffer, 0, sizeof(const_byte_buffer));
 
   packet_len = lead_in_len;
   ndx = 5;
@@ -30,18 +30,18 @@ void IncomingData() {
   while ((Serial1.available() > 0) && (new_data == false)) {
     rc = Serial1.read();
 
-    if ((hdr_buffer[0] != 0xff) ||
-        (hdr_buffer[1] != 0xff) ||
-        (hdr_buffer[2] != 0xfd) ||
-        (hdr_buffer[3] != 0x00) ||
-        (hdr_buffer[4] != TARGET_GRIPPER)) {
+    if ((const_byte_buffer[0] != 0xFF) ||
+        (const_byte_buffer[1] != 0xFF) ||
+        (const_byte_buffer[2] != 0xFD) ||
+        (const_byte_buffer[3] != 0x00) ||
+        (const_byte_buffer[4] != TARGET_GRIPPER)) {
       // Overwrite existing header buffer if invalid
       for (size_t k = 0; k < packet_const_byte_len - 1; k++) {
-        hdr_buffer[k] = hdr_buffer[k + 1];
+        const_byte_buffer[k] = const_byte_buffer[k + 1];
       }
-      hdr_buffer[packet_const_byte_len - 1] = rc;
+      const_byte_buffer[packet_const_byte_len - 1] = rc;
     } else {
-      for (size_t k = 0; k < packet_const_byte_len; k++) received_packet[k] = hdr_buffer[k];
+      for (size_t k = 0; k < packet_const_byte_len; k++) received_packet[k] = const_byte_buffer[k];
       received_packet[ndx] = rc;
 
       if (ndx == 6) {
@@ -84,13 +84,14 @@ void ProcessData() {
   char addr = ((received_packet[9] << 8) | (received_packet[8]));
 
   if (send_ack_packet) {
-    SendPingPacket();
+    SendAckPacket();
     send_ack_packet = false;
   }
 
   switch (instr) {
     case INSTR_PING:
-      SendPingPacket();
+      SendAckPacket();
+      break;
 
     case INSTR_READ:
       switch (addr) {
@@ -225,19 +226,23 @@ void setup() {
   send_ack_packet = false;
   err_state = 0x00;
 
+  // Pin to toggle RS-485 between read/write
+  pinMode(UART1_DIR, OUTPUT);
+  digitalWrite(2, LOW);
+
   // Set LED pins
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(21, OUTPUT);
-  pinMode(22, OUTPUT);
-  pinMode(23, OUTPUT);
-  analogWrite(4, LED_HIGH);        // RED
-  analogWrite(5, LED_HIGH);        // GREEN
-  analogWrite(6, LED_HIGH);        // BLUE
-  analogWrite(21, LED_HIGH);        // BLUE
-  analogWrite(22, LED_HIGH);        // GREEN
-  analogWrite(23, LED_HIGH); // RED
+  pinMode(LED1_R, OUTPUT);
+  pinMode(LED1_G, OUTPUT);
+  pinMode(LED1_B, OUTPUT);
+  pinMode(LED2_R, OUTPUT);
+  pinMode(LED2_G, OUTPUT);
+  pinMode(LED2_B, OUTPUT);
+  analogWrite(LED1_R, LED_HIGH);
+  analogWrite(LED1_G, LED_HIGH);
+  analogWrite(LED1_B, LED_HIGH);
+  analogWrite(LED2_R, LED_HIGH);
+  analogWrite(LED2_G, LED_HIGH);
+  analogWrite(LED2_B, LED_HIGH);
   
   // Initialize the VL6180X
   vl.begin();
@@ -269,22 +274,24 @@ void setup() {
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
   
-  pinMode(chip_select, OUTPUT);
-  if (!SD.begin(chip_select)) {
+  pinMode(CS, OUTPUT);
+  if (!SD.begin(CS)) {
     Serial.println("SD card initialization failed! Trying again...");
     while (1);
   }
 }
 
 void loop() {
+  // TODO(acauligi): update loop() to run faster to not drop packets
   UpdateGripperState();
   IncomingData();
   if (new_data) { 
     ProcessData();
   }
-  Automatic();
 
-  if (experiment_in_progress) {
-    WriteToCard();
-  }
+ Automatic();
+
+ if (experiment_in_progress) {
+   WriteToCard();
+ }
 }

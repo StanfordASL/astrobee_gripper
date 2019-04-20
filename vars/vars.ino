@@ -7,51 +7,51 @@
 #include <SD.h>
 
 // Command addresses
-const char ADDRESS_TOGGLE_AUTO = 0x33;
-const char ADDRESS_OPEN = 0x34;
-const char ADDRESS_CLOSE = 0x35;
-const char ADDRESS_MARK = 0x36;
-const char ADDRESS_ENGAGE = 0x40;
-const char ADDRESS_DISENGAGE = 0x41;
-const char ADDRESS_LOCK = 0x50;
-const char ADDRESS_UNLOCK = 0x51;
-const char ADDRESS_ENABLE_AUTO = 0x60;
-const char ADDRESS_DISABLE_AUTO = 0x61;
-const char ADDRESS_OPEN_EXPERIMENT = 0x70;
-const char ADDRESS_NEXT_RECORD = 0x71;
-const char ADDRESS_SEEK_RECORD = 0x72;
-const char ADDRESS_CLOSE_EXPERIMENT = 0x73;
+const unsigned char ADDRESS_TOGGLE_AUTO = 0x33;
+const unsigned char ADDRESS_OPEN = 0x34;
+const unsigned char ADDRESS_CLOSE = 0x35;
+const unsigned char ADDRESS_MARK = 0x36;
+const unsigned char ADDRESS_ENGAGE = 0x40;
+const unsigned char ADDRESS_DISENGAGE = 0x41;
+const unsigned char ADDRESS_LOCK = 0x50;
+const unsigned char ADDRESS_UNLOCK = 0x51;
+const unsigned char ADDRESS_ENABLE_AUTO = 0x60;
+const unsigned char ADDRESS_DISABLE_AUTO = 0x61;
+const unsigned char ADDRESS_OPEN_EXPERIMENT = 0x70;
+const unsigned char ADDRESS_NEXT_RECORD = 0x71;
+const unsigned char ADDRESS_SEEK_RECORD = 0x72;
+const unsigned char ADDRESS_CLOSE_EXPERIMENT = 0x73;
 
 // Read registers
-const char STATUS = 0x30;
-const char RECORD = 0x7A;
-const char EXPERIMENT = 0x7B;
+const unsigned char STATUS = 0x30;
+const unsigned char RECORD = 0x7A;
+const unsigned char EXPERIMENT = 0x7B;
 
 // Protocol target constants
-const char TARGET_PROXIMAL      = 0x00;
-const char TARGET_DISTAL        = 0x01;
-const char HOST_ARM_BASIC_CMD_GECKO_GRIPPER = 9;
-const char TARGET_GRIPPER       =  HOST_ARM_BASIC_CMD_GECKO_GRIPPER;
+const unsigned char TARGET_PROXIMAL      = 0x00;
+const unsigned char TARGET_DISTAL        = 0x01;
+const unsigned char HOST_ARM_BASIC_CMD_GECKO_GRIPPER = 0x09;
+const unsigned char TARGET_GRIPPER       =  HOST_ARM_BASIC_CMD_GECKO_GRIPPER;
 
 // Instructions
-const char INSTR_PING           = 0x01;
-const char INSTR_READ           = 0x02;
-const char INSTR_WRITE          = 0x03;
-const char INSTR_REG_WRITE      = 0x04;
-const char INSTR_ACTION         = 0x05;
-const char INSTR_FACTORY_RESET  = 0x06;
-const char INSTR_STATUS         = 0x55;
+const unsigned char INSTR_PING           = 0x01;
+const unsigned char INSTR_READ           = 0x02;
+const unsigned char INSTR_WRITE          = 0x03;
+const unsigned char INSTR_REG_WRITE      = 0x04;
+const unsigned char INSTR_ACTION         = 0x05;
+const unsigned char INSTR_FACTORY_RESET  = 0x06;
+const unsigned char INSTR_STATUS         = 0x55;
 
 // Error number
-const char ERR_RESULT           = 0x01;
-const char ERR_INSTR            = 0x02;
-const char ERR_CRC              = 0x03;
-const char ERR_DATA_RANGE       = 0x04;
-const char ERR_DATA_LEN         = 0x05;
-const char ERR_DATA_LIM         = 0x06;
-const char ERR_ACCESS           = 0x07;
+const unsigned char ERR_RESULT           = 0x01;
+const unsigned char ERR_INSTR            = 0x02;
+const unsigned char ERR_CRC              = 0x03;
+const unsigned char ERR_DATA_RANGE       = 0x04;
+const unsigned char ERR_DATA_LEN         = 0x05;
+const unsigned char ERR_DATA_LIM         = 0x06;
+const unsigned char ERR_ACCESS           = 0x07;
 // following are custom error commands
-const char ERR_TOF           = 0x08;
+const unsigned char ERR_TOF           = 0x08;
 
 // Gripper states
 bool adhesive_engage;
@@ -59,6 +59,17 @@ bool wrist_lock;
 bool automatic_mode_enable;
 bool experiment_in_progress;
 bool overtemperature_flag;
+
+// Pin values
+const int UART1_DIR = 2; 
+const int CS = 10;
+const int LED1_R = 23;
+const int LED1_G = 22;
+const int LED1_B = 21;
+const int LED2_R = 4;
+const int LED2_G = 5;
+const int LED2_B = 6;
+const int LED_HIGH = 40;
 
 // Global variables
 unsigned long cur_time_ms; 
@@ -84,10 +95,9 @@ const size_t record_packet_data_len = 35;
 const size_t experiment_packet_data_len = 4;
 
 const int num_chars = 64;             // TODO(acauligi): max # of bytes?
-unsigned char hdr_buffer[packet_const_byte_len];
+unsigned char const_byte_buffer[packet_const_byte_len];
 unsigned char received_packet[num_chars];
 unsigned char record_line[record_packet_data_len];
-const int LED_HIGH = 40;
 
 // Assigning the PWMServoDriver I2C address
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
@@ -99,7 +109,6 @@ const int overtemperature_trigger = 45;     // Celsius
 
 // Instantiate objects for SD card r/w
 File my_file;
-int chip_select = 10;
 uint32_t record_num; 
 bool file_is_open = false;
 const int file_open_attempts = 10;
