@@ -7,7 +7,7 @@ void WriteToCard() {
   ConstructExperimentRecordLine(); 
 
   for (size_t k =0; k < record_packet_data_len; k++) {
-    my_file.println(char(record_line[k]));
+    my_file.print(char(record_line[k]));
   }
   my_file.print("\r\n");    // TODO(acauligi): double check line ending
 }
@@ -46,7 +46,8 @@ void ReadRecordFromCard() {
       break;
     }
     // TODO(acauligi): issue with casting char cr to unsigned char record_line[k]
-    record_line[k] = cr;
+    record_line[record_line_idx] = cr;
+    record_line_idx++;
     cr = my_file.read();
     if (cr == '\n') {
       break;

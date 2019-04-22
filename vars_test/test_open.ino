@@ -1,4 +1,4 @@
-const size_t open_tx_packet_len = 12;
+const size_t open_tx_packet_len = 13;
 
 void SendOpenPacket() {
   unsigned char open_tx_packet[open_tx_packet_len];
@@ -12,11 +12,13 @@ void SendOpenPacket() {
   open_tx_packet[7] = INSTR_WRITE;
   open_tx_packet[8] = LowByte(ADDRESS_OPEN);
   open_tx_packet[9] = HighByte(ADDRESS_OPEN);
+
+  open_tx_packet[10] = 0x00;
         
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, open_tx_packet, open_tx_packet_len - 2);
-  open_tx_packet[10] = LowByte(crc_value); 
-  open_tx_packet[11] = HighByte(crc_value); 
+  open_tx_packet[11] = LowByte(crc_value); 
+  open_tx_packet[12] = HighByte(crc_value); 
   Serial.println(open_tx_packet[9]);
   Serial.println(open_tx_packet[10]);
   Serial.println(crc_value);
@@ -36,11 +38,13 @@ void SendClosePacket() {
   open_tx_packet[7] = INSTR_WRITE;
   open_tx_packet[8] = LowByte(ADDRESS_CLOSE);
   open_tx_packet[9] = HighByte(ADDRESS_CLOSE);
+
+  open_tx_packet[10] = 0x00;
         
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, open_tx_packet, open_tx_packet_len - 2);
-  open_tx_packet[10] = LowByte(crc_value); 
-  open_tx_packet[11] = HighByte(crc_value); 
+  open_tx_packet[11] = LowByte(crc_value); 
+  open_tx_packet[12] = HighByte(crc_value); 
   Serial.println(open_tx_packet[9]);
   Serial.println(open_tx_packet[10]);
   Serial.println(crc_value);
