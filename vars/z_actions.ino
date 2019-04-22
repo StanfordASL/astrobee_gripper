@@ -227,5 +227,6 @@ void Automatic() {
     float dh = vl_range_mm / mean_vel_mps; 
     delay(dh);
     CloseGripper();
+    DisableAuto(); 
   }
 }

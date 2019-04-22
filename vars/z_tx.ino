@@ -217,10 +217,10 @@ void SendExperimentPacket() {
   experiment_packet[8] = err_state; 
 
   if (experiment_in_progress) {
-    experiment_packet[9]  = (char)(((unsigned long)experiment_idx & 0xff000000UL) >> 24);
-    experiment_packet[10] = (char)(((unsigned long)experiment_idx & 0x00ff0000UL) >> 16);
-    experiment_packet[11] = (char)(((unsigned long)experiment_idx & 0x0000ff00UL) >> 8); 
-    experiment_packet[12] = (char)(((unsigned long)experiment_idx & 0x000000ffUL)     );
+    experiment_packet[9]  = (char)(((unsigned long)experiment_idx & 0xFF000000UL) >> 24);
+    experiment_packet[10] = (char)(((unsigned long)experiment_idx & 0x00FF0000UL) >> 16);
+    experiment_packet[11] = (char)(((unsigned long)experiment_idx & 0x0000FF00UL) >> 8); 
+    experiment_packet[12] = (char)(((unsigned long)experiment_idx & 0x000000FFUL)     );
   } else {
     experiment_packet[9]  = 0x00; 
     experiment_packet[10] = 0x00;
