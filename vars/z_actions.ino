@@ -54,7 +54,7 @@ void Unlock() {
 }
 
 void EnableAuto() {
-  UpdateGripperState();
+  OpenGripper();
   automatic_mode_enable = true;
   return;
 }
@@ -86,11 +86,14 @@ void Mark() {
     return;
   }
 
-  experiment_idx = ToUInt32(received_packet+lead_in_len+1);
+  experiment_idx = ToUInt32(received_packet+lead_in_len+3);
 
-  String fn = String(experiment_idx + ".txt");
+  String fn = String(String(experiment_idx) + ".txt");
+  char file_name[9];      // ____.txt
+  fn.toCharArray(file_name,9);
+
   for (int i = 0; i < file_open_attempts; i++) {
-    my_file = SD.open(fn, FILE_WRITE);
+    my_file = SD.open(file_name, FILE_WRITE);
     if (my_file) {
       file_is_open = true;
       experiment_in_progress = true;
@@ -117,12 +120,16 @@ void OpenExperiment() {
   }
 
   experiment_idx = ToUInt32(received_packet+lead_in_len+1);
+ 
+  String fn = String(String(experiment_idx) + ".txt");
+  char file_name[9];      // ____.txt
+  fn.toCharArray(file_name,9);
   
-  String fn = String(experiment_idx + ".txt");
   for (int i = 0; i < file_open_attempts; i++) {
-    my_file = SD.open(fn, FILE_READ);
+    my_file = SD.open(file_name, FILE_READ);
     if (my_file) {
       file_is_open = true;
+      record_num = 0;
       return;
     }
   }
@@ -135,7 +142,7 @@ void NextRecord() {
     return;
   }
 
-  uint8_t skip = (uint8_t)(received_packet[8]); 
+  uint8_t skip = (uint8_t)(received_packet[10]); 
 
   if (file_is_open && !experiment_in_progress) {
     record_num += skip;
@@ -153,7 +160,8 @@ void SeekRecord() {
   }
   
   if (file_is_open && !experiment_in_progress) { 
-    record_num = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
+    // record_num = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
+    record_num = ToUInt32(received_packet+lead_in_len+3);
   } else {
     // TODO(acauligi): Send error byte?
   }
@@ -161,7 +169,7 @@ void SeekRecord() {
 }
 
 void CloseExperiment() {
-  if(!file_is_open || !experiment_in_progress) {
+  if(!file_is_open) { 
     // TODO(acauligi): Send error byte?
     return;
   }

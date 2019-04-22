@@ -9,7 +9,7 @@ void SendPacket(unsigned char* packet, size_t len) {
     Serial1.write(packet[k]);
     delayMicroseconds(2);
   }
-  Serial.flush();
+  Serial1.flush();
 
   // delayMicroseconds(1);
   delay(1);
@@ -27,12 +27,8 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
 void ConstructExperimentRecordLine() {
   // TIME: running 16-bit unsigned counter since Teensy power-on
   cur_time_ms = millis();
-  // TODO(acauligi): how to write the numbers in characters?
-  record_line[0] = 0x00; 
-  record_line[1] = (char)((cur_time_ms & 0xff000000UL) >> 24);
-  record_line[2] = (char)((cur_time_ms & 0x00ff0000UL) >> 16);
-  record_line[3] = (char)((cur_time_ms & 0x0000ff00UL) >> 8); 
-  record_line[4] = (char)((cur_time_ms & 0x000000ffUL)     ); 
+  String TIME_s = String(int(cur_time_ms/1000));
+  TIME_s.toCharArray((char*)record_line,5);
 
   record_line[5] = ',';
 
@@ -45,49 +41,39 @@ void ConstructExperimentRecordLine() {
   record_line[9] = ',';
 
   // SRV_L1_CURR
-  record_line[10] = (char)(((unsigned long)current_mA_A & 0xff000000UL) >> 24);
-  record_line[11] = (char)(((unsigned long)current_mA_A & 0x00ff0000UL) >> 16);
-  record_line[12] = (char)(((unsigned long)current_mA_A & 0x0000ff00UL) >> 8); 
-  record_line[13] = (char)(((unsigned long)current_mA_A & 0x000000ffUL)     );
+  String SRV_L1_CURR_mA = String(int(current_mA_A));
+  SRV_L1_CURR_mA.toCharArray((char*)record_line+10,4);
 
   record_line[14] = ',';
 
   // SRV_L2_CURR
-  record_line[15] = (char)(((unsigned long)current_mA_B & 0xff000000UL) >> 24);
-  record_line[16] = (char)(((unsigned long)current_mA_B & 0x00ff0000UL) >> 16);
-  record_line[17] = (char)(((unsigned long)current_mA_B & 0x0000ff00UL) >> 8); 
-  record_line[18] = (char)(((unsigned long)current_mA_B & 0x000000ffUL)     ); 
+  String SRV_L2_CURR_mA = String(int(current_mA_B));
+  SRV_L2_CURR_mA.toCharArray((char*)record_line+15,4);
 
   record_line[19] = ',';
 
-  // SRV_R_CURR 
-  record_line[20] = (char)(((unsigned long)current_mA_C & 0xff000000UL) >> 24);
-  record_line[21] = (char)(((unsigned long)current_mA_C & 0x00ff0000UL) >> 16);
-  record_line[22] = (char)(((unsigned long)current_mA_C & 0x0000ff00UL) >> 8); 
-  record_line[23] = (char)(((unsigned long)current_mA_C & 0x000000ffUL)     ); 
+  // SRV_R_CURR
+  String SRV_R_CURR_mA = String(int(current_mA_C));
+  SRV_R_CURR_mA.toCharArray((char*)record_line+20,4);
 
   record_line[24] = ',';
 
-  // SRV_W_CURR 
-  record_line[25] = (char)(((unsigned long)current_mA_D & 0xff000000UL) >> 24);
-  record_line[26] = (char)(((unsigned long)current_mA_D & 0x00ff0000UL) >> 16);
-  record_line[27] = (char)(((unsigned long)current_mA_D & 0x0000ff00UL) >> 8); 
-  record_line[28] = (char)(((unsigned long)current_mA_D & 0x000000ffUL)     ); 
+  // SRV_W_CURR
+  String SRV_W_CURR_mA = String(int(current_mA_D));
+  SRV_W_CURR_mA.toCharArray((char*)record_line+25,4);
 
   record_line[29] = ',';
 
   // TOF
-  // TODO(acauligi): what to do when ToF sensor reads faulty measurement?
-  record_line[30] = 0x00;
-  record_line[31] = 0x00;
-  record_line[32] = vl_range_mm;
-  
+  String TOF_mm = String(int(vl_range_mm));
+  TOF_mm.toCharArray((char*)record_line+30,3);
+
   record_line[33] = ',';
   
   record_line[34] = overtemperature_flag ? '*' : '-';
 }
 
-void SendErrorPacket(char ERR_NUMBER) {
+void SendErrorPacket(unsigned char ERR_NUMBER) {
   err_state = ConstructErrorByte(ERR_NUMBER);
 
   size_t err_packet_len = min_tx_len;
@@ -149,16 +135,32 @@ void SendStatusPacket() {
   status_packet[5] = LowByte(status_packet_len - lead_in_len);
   status_packet[6] = HighByte(status_packet_len - lead_in_len);
   status_packet[7] = INSTR_STATUS;
-  status_packet[8] = err_state; 
-  // status_packet[8] = 0x00; 
+  status_packet[8] = err_state;
 
   // STATUS_H = [TEMP -   -   -   -   -   - EXP]
-  unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
+  // unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
+  unsigned char STATUS_H = 0x00;
+  if (overtemperature_flag) {
+    STATUS_H = (STATUS_H | 0x80);
+  }
+  if (experiment_in_progress) {
+    STATUS_H = (STATUS_H | 0x01);
+  }
   status_packet[9] = STATUS_H;
-
-  // STATUS_L = [- - - - AUTO - WRIST ADH] 
-  unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
-  status_packet[10] = STATUS_L; 
+  
+  // STATUS_L = [- - - - AUTO - WRIST ADH]
+  // unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
+  unsigned char STATUS_L = 0x00;
+  if (automatic_mode_enable) {
+    STATUS_L = (STATUS_L | 0x08);
+  }
+  if (wrist_lock) {
+    STATUS_L = (STATUS_L | 0x02);
+  }
+  if (adhesive_engage) {
+    STATUS_L  = (STATUS_L | 0x01);
+  }
+  status_packet[10] = STATUS_L;
 
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, status_packet, status_packet_len - 2);
@@ -188,6 +190,7 @@ void SendRecordPacket() {
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_state; 
 
+  ReadRecordFromCard();
   for (size_t record_idx = 0; record_idx < record_packet_data_len; record_idx++) {
     record_packet[9+record_idx] = record_line[record_idx];
   }

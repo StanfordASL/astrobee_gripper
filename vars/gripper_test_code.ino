@@ -157,7 +157,7 @@ void ProcessData() {
       break;
 
     default:
-      Serial.println("ERROR PACKET");
+      SendErrorPacket(ERR_INSTR);
   }
 
   ResetState();
@@ -192,15 +192,7 @@ bool ReadToF() {
   return false;
 }
 
-void UpdateGripperState() {
-  // Take ToF sensor measurement
-  if (automatic_mode_enable) {
-    if (!ReadToF()) {
-      // faulty ToF sensor reading, send error byte
-      // SendErrorPacket(ERR_TOF);
-    }
-  }
-
+void MeasureCurrentSensors() {
   // Take current sensor measurements
   current_mA_A = ina219_A.getCurrent_mA();
   current_mA_B = ina219_B.getCurrent_mA();
@@ -283,7 +275,7 @@ void setup() {
 
 void loop() {
   // TODO(acauligi): update loop() to run faster to not drop packets
-  UpdateGripperState();
+  // MeasureCurrentSensors();
   IncomingData();
   if (new_data) { 
     ProcessData();
