@@ -16,6 +16,7 @@ void loop() {
 
   switch (Serial.read()) {
     case 109:  // 'm'
+      experiment_idx = 17;
       SendMarkExperimentPacket();
       Serial.println("Mark has been sent");
       break;

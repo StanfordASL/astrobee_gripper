@@ -86,7 +86,7 @@ void Mark() {
     return;
   }
 
-  experiment_idx = ToUInt32(received_packet+lead_in_len+3);
+  experiment_idx = ToUInt16(received_packet+lead_in_len+3);
 
   String fn = String(String(experiment_idx) + ".txt");
   char file_name[9];      // ____.txt
@@ -119,7 +119,7 @@ void OpenExperiment() {
     return;
   }
 
-  experiment_idx = ToUInt32(received_packet+lead_in_len+1);
+  experiment_idx = ToUInt16(received_packet+lead_in_len+1);
  
   String fn = String(String(experiment_idx) + ".txt");
   char file_name[9];      // ____.txt
@@ -160,8 +160,7 @@ void SeekRecord() {
   }
   
   if (file_is_open && !experiment_in_progress) { 
-    // record_num = ((uint32_t)(received_packet[8])<<24) | ((uint32_t)(received_packet[9])<<16) | ((uint32_t)(received_packet[10])<<8) | ((uint32_t)(received_packet[11])); 
-    record_num = ToUInt32(received_packet+lead_in_len+3);
+    record_num = ToUInt16(received_packet+lead_in_len+3);
   } else {
     // TODO(acauligi): Send error byte?
   }

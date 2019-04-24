@@ -1,6 +1,6 @@
-const size_t mark_experiment_tx_packet_len = 16;
-const size_t open_experiment_tx_packet_len = 16;
-const size_t seek_record_tx_packet_len = 13;
+const size_t mark_experiment_tx_packet_len = 14;
+const size_t open_experiment_tx_packet_len = 14;
+const size_t seek_record_tx_packet_len = 14;
 const size_t next_record_tx_packet_len = 13;
 const size_t automatic_enable_tx_packet_len = 13;
 
@@ -17,16 +17,13 @@ void SendMarkExperimentPacket() {
   mark_experiment_tx_packet[8] = LowByte(ADDRESS_MARK);
   mark_experiment_tx_packet[9] = HighByte(ADDRESS_MARK);
 
-  // uint32_t IDX;
-  mark_experiment_tx_packet[10] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0xFF000000UL) >> 24));
-  mark_experiment_tx_packet[11] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00FF0000UL) >> 16));
-  mark_experiment_tx_packet[12] = 0x23; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x0000FF00UL) >> 8));
-  mark_experiment_tx_packet[13] = 0x28; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00000000UL)));
+  mark_experiment_tx_packet[10] = HighByte((unsigned short)experiment_idx);
+  mark_experiment_tx_packet[11] = LowByte((unsigned short)experiment_idx);
         
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, mark_experiment_tx_packet, mark_experiment_tx_packet_len - 2);
-  mark_experiment_tx_packet[14] = LowByte(crc_value); 
-  mark_experiment_tx_packet[15] = HighByte(crc_value); 
+  mark_experiment_tx_packet[12] = LowByte(crc_value); 
+  mark_experiment_tx_packet[13] = HighByte(crc_value); 
 
   SendPacket(mark_experiment_tx_packet, mark_experiment_tx_packet_len);
 }
@@ -44,16 +41,13 @@ void SendOpenExperimentPacket() {
   send_open_experiment_tx_packet[8] = LowByte(ADDRESS_OPEN_EXPERIMENT);
   send_open_experiment_tx_packet[9] = HighByte(ADDRESS_OPEN_EXPERIMENT);
 
-  // uint32_t IDX;
-  send_open_experiment_tx_packet[10] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0xFF000000UL) >> 24));
-  send_open_experiment_tx_packet[11] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00FF0000UL) >> 16));
-  send_open_experiment_tx_packet[12] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x0000FF00UL) >> 8));
-  send_open_experiment_tx_packet[13] = 0x09; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00000000UL)));
+  send_open_experiment_tx_packet[10] = HighByte((unsigned short)experiment_idx);
+  send_open_experiment_tx_packet[11] = LowByte((unsigned short)experiment_idx);
         
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, send_open_experiment_tx_packet, open_experiment_tx_packet_len - 2);
-  send_open_experiment_tx_packet[14] = LowByte(crc_value); 
-  send_open_experiment_tx_packet[15] = HighByte(crc_value); 
+  send_open_experiment_tx_packet[12] = LowByte(crc_value); 
+  send_open_experiment_tx_packet[13] = HighByte(crc_value); 
 
   SendPacket(send_open_experiment_tx_packet, open_experiment_tx_packet_len);
 }
@@ -71,16 +65,13 @@ void SendSeekRecordPacket() {
   send_seek_record_tx_packet[8] = LowByte(ADDRESS_SEEK_RECORD);
   send_seek_record_tx_packet[9] = HighByte(ADDRESS_SEEK_RECORD);
 
-  // uint32_t RN;
-  send_seek_record_tx_packet[10] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0xFF000000UL) >> 24));
-  send_seek_record_tx_packet[11] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00FF0000UL) >> 16));
-  send_seek_record_tx_packet[12] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x0000FF00UL) >> 8));
-  send_seek_record_tx_packet[13] = 0x09; // ((unsigned char) ( ( ((unsigned long) IDX) && 0x00000000UL)));
+  send_seek_record_tx_packet[10] = HighByte((unsigned short)record_num);
+  send_seek_record_tx_packet[11] = LowByte((unsigned short)record_num);
         
   unsigned short crc_value = 0;
   crc_value = update_crc(crc_value, send_seek_record_tx_packet, seek_record_tx_packet_len - 2);
-  send_seek_record_tx_packet[14] = LowByte(crc_value); 
-  send_seek_record_tx_packet[15] = HighByte(crc_value); 
+  send_seek_record_tx_packet[12] = LowByte(crc_value); 
+  send_seek_record_tx_packet[13] = HighByte(crc_value); 
 
   SendPacket(send_seek_record_tx_packet, seek_record_tx_packet_len);
 }

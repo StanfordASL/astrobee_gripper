@@ -77,7 +77,7 @@ boolean new_data;
 size_t packet_len; 
 size_t ndx;
 bool send_ack_packet; 
-uint32_t experiment_idx;
+uint16_t experiment_idx;
 unsigned char err_state; 
 
 const size_t hdr_const_byte_len = 2;              // HDR = [0xFF, 0xFF, 0xFD] 
@@ -92,7 +92,7 @@ const size_t min_tx_len = lead_in_len + crc_len + 2;  // [LEAD_IN, INSTR, ERR, (
 
 const size_t status_packet_data_len = 2;
 const size_t record_packet_data_len = 35;
-const size_t experiment_packet_data_len = 4;
+const size_t experiment_packet_data_len = 2;
 
 const int num_chars = 64;             // TODO(acauligi): max # of bytes?
 unsigned char const_byte_buffer[packet_const_byte_len];
@@ -109,7 +109,7 @@ const int overtemperature_trigger = 45;     // Celsius
 
 // Instantiate objects for SD card r/w
 File my_file;
-uint32_t record_num; 
+uint16_t record_num; 
 bool file_is_open = false;
 const int file_open_attempts = 10;
 

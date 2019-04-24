@@ -53,3 +53,6 @@ const int num_chars = 30;
 const size_t hdr_size = 5;
 unsigned char received_packet[num_chars];
 unsigned char hdr_buffer[hdr_size];
+
+uint16_t experiment_idx;
+uint16_t record_num;

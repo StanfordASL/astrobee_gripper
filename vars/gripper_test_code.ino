@@ -6,6 +6,11 @@ unsigned char HighByte(unsigned short v) {
   return ((unsigned char) (((unsigned int) (v)) >> 8));
 }
 
+uint16_t ToUInt16(unsigned char* ptr) {
+  uint16_t new_value = ((uint16_t)(ptr[0])<<8) | ((uint16_t)(ptr[1]));
+  return new_value;
+}
+
 uint32_t ToUInt32(unsigned char* ptr) {
   uint32_t new_value = ((uint32_t)(ptr[0])<<24) | ((uint32_t)(ptr[1])<<16) | ((uint32_t)(ptr[2])<<8) | ((uint32_t)(ptr[3])); 
   return new_value;
