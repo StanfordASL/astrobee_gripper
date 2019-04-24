@@ -14,7 +14,7 @@ void setup() {
 void loop() {
   ResetState();
 
-  switch(Serial.read()){
+  switch (Serial.read()) {
     case 109:  // 'm'
       SendMarkExperimentPacket();
       Serial.println("Mark has been sent");
@@ -28,7 +28,7 @@ void loop() {
     case 114: // 'r'
       SendReadPacket();
       break;
-      
+
     case 111: // 'o'
       SendOpenExperimentPacket();
       Serial.println("Open experiment sent");
@@ -43,16 +43,21 @@ void loop() {
       SendClosePacket();
       Serial.println("Close command sent");
       break;
-    }
-  
+
+    case 101: // 'e'
+      SendAutomaticEnablePacket();
+      Serial.println("Automatic Enable sent");
+      break;
+  }
+
   //  SendPingPacket();
   //   SendReadPacket();
   //   SendWritePacket();
   //   SendChecksumPacket();
-//  SendOpenPacket();
-//  delay(1500);
-//  SendClosePacket();
-//  Serial.println("The packet has been sent!");
+  //  SendOpenPacket();
+  //  delay(1500);
+  //  SendClosePacket();
+  //  Serial.println("The packet has been sent!");
 
   IncomingData();
   if (new_data) {
@@ -62,12 +67,12 @@ void loop() {
       Serial.print(char(received_packet[k]));
     }
     Serial.println();
-//    bool packet_valid = VerifyChecksumRxPacket();
-//    if (packet_valid) {
-//      Serial.println("Test passed!");
-//    } else {
-//      Serial.println("Test failed!");
-//    }
+    //    bool packet_valid = VerifyChecksumRxPacket();
+    //    if (packet_valid) {
+    //      Serial.println("Test passed!");
+    //    } else {
+    //      Serial.println("Test failed!");
+    //    }
   }
-//  delay(1500);
+  //  delay(1500);
 }

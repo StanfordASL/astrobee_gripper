@@ -238,10 +238,6 @@ void setup() {
   
   // Initialize the VL6180X
   vl.begin();
-  for (size_t k = 0; k < n_vel_buf; k++) {
-    // fill sensor measurement buffer with null values
-    vel_buf[k] = NULL;  // TODO(acauligi): or 0x00?
-  }
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However

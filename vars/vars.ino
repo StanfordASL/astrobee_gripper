@@ -119,11 +119,13 @@ Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range_mm;
 uint8_t last_vl_range_mm;
 uint8_t last_vl_range_time_ms;
-const uint8_t vl_range_min_mm = 10;    // [mm] 
-const uint8_t vl_range_max_mm = 95;   // [mm] 
-const int n_vel_buf = 50;   // number of values stored in distance sensor buffer
-float vel_buf[n_vel_buf];
-size_t vel_buf_idx = 0;
+const uint8_t vl_range_min_mm = 20;
+const uint8_t vl_range_max_mm = 40; 
+const float auto_tof_sensor_offset_mm = 10;
+const float auto_grasp_offset_ms = 200;
+uint8_t vl_range_first_mm;
+float vl_range_first_time_ms;
+bool vl_range_first_set = false;
 
 // Instantiating INA219 current sensors I2C address
 Adafruit_INA219 ina219_A;

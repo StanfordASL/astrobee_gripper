@@ -189,43 +189,19 @@ void Automatic() {
     return;
   }
 
-  // TODO(acauligi): change buffer into circular buffer
-  if (vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm) {
-    if(vel_buf_idx==0) {
-      last_vl_range_mm = vl_range_mm;
-      last_vl_range_time_ms = millis(); 
-    } else {
-      if (vel_buf_idx==n_vel_buf) {
-        // Buffer is full
-        for (size_t k = 0; k < n_vel_buf-1; k++) {
-          vel_buf[k] = vel_buf[k+1];
-        }
-        vel_buf_idx = n_vel_buf-1;
-      }
 
-      cur_time_ms = millis();
-      vel_buf[vel_buf_idx] = (vl_range_mm-last_vl_range_mm) / (cur_time_ms - last_vl_range_time_ms);
-      last_vl_range_mm = vl_range_mm;
-      last_vl_range_time_ms = cur_time_ms;
-    }
-    vel_buf_idx++;
+  if (vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm && !vl_range_first_set) {
+    vl_range_first_mm = vl_range_mm;
+    vl_range_first_time_ms = millis();
+    vl_range_first_set = true;
   } else if (vl_range_mm < vl_range_min_mm) {
-    // calculate average speed from values in buffer
-    float mean_vel_mps = 0;
-    if (!vel_buf[0]) {
-      return;
-    } else {
-      // TODO(acauligi): double check!
-      mean_vel_mps = vel_buf[0];
-      size_t k = 1;
-      while (k<n_vel_buf && !vel_buf[k]) {
-        mean_vel_mps = (k*mean_vel_mps + vel_buf[k]) / (k+1);
-        k++;
-      }
-    }
-
-    float dh = vl_range_mm / mean_vel_mps; 
-    delay(dh);
+    
+    float v_mps = ((float)vl_range_first_mm - (float)vl_range_mm) / (millis() - vl_range_first_time_ms) ;
+    float dh_ms = auto_tof_sensor_offset_mm/v_mps;
+    
+    delay(dh_ms+auto_grasp_offset_ms);
     CloseGripper();
+    DisableAuto();
+    vl_range_first_set = false;
   }
 }
