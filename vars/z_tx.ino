@@ -115,13 +115,6 @@ void SendAckPacket() {
   ping_packet[ping_packet_len-1] = HighByte(crc_value);
 
   SendPacket(ping_packet, ping_packet_len);
-//  analogWrite(LED1_R, LED_HIGH);
-//  analogWrite(LED1_G, 0);
-//  analogWrite(LED1_B, 0);
-//  delay(100);
-//  analogWrite(LED1_R, LED_HIGH);
-//  analogWrite(LED1_G, LED_HIGH);
-//  analogWrite(LED1_B, LED_HIGH);
 }
 
 void SendStatusPacket() {
@@ -138,28 +131,11 @@ void SendStatusPacket() {
   status_packet[8] = err_state;
 
   // STATUS_H = [TEMP -   -   -   -   -   - EXP]
-  // unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
-  unsigned char STATUS_H = 0x00;
-  if (overtemperature_flag) {
-    STATUS_H = (STATUS_H | 0x80);
-  }
-  if (experiment_in_progress) {
-    STATUS_H = (STATUS_H | 0x01);
-  }
+  unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
   status_packet[9] = STATUS_H;
   
   // STATUS_L = [- - - - AUTO - WRIST ADH]
-  // unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
-  unsigned char STATUS_L = 0x00;
-  if (automatic_mode_enable) {
-    STATUS_L = (STATUS_L | 0x08);
-  }
-  if (wrist_lock) {
-    STATUS_L = (STATUS_L | 0x02);
-  }
-  if (adhesive_engage) {
-    STATUS_L  = (STATUS_L | 0x01);
-  }
+  unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
   status_packet[10] = STATUS_L;
 
   unsigned short crc_value = 0;
@@ -168,13 +144,6 @@ void SendStatusPacket() {
   status_packet[status_packet_len-1] = HighByte(crc_value);
 
   SendPacket(status_packet, status_packet_len);
-//  analogWrite(LED1_R, 0);
-//  analogWrite(LED1_G, LED_HIGH);
-//  analogWrite(LED1_B, 0);
-//  delay(100);
-//  analogWrite(LED1_R, LED_HIGH);
-//  analogWrite(LED1_G, LED_HIGH);
-//  analogWrite(LED1_B, LED_HIGH);
 }  
 
 void SendRecordPacket() {
@@ -190,7 +159,8 @@ void SendRecordPacket() {
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_state; 
 
-  ReadRecordFromCard();
+  // ReadRecordFromCard();
+  ConstructExperimentRecordLine();
   for (size_t record_idx = 0; record_idx < record_packet_data_len; record_idx++) {
     record_packet[9+record_idx] = record_line[record_idx];
   }
@@ -217,10 +187,10 @@ void SendExperimentPacket() {
   experiment_packet[8] = err_state; 
 
   if (experiment_in_progress) {
-    experiment_packet[9]  = (char)(((unsigned long)experiment_idx & 0xff000000UL) >> 24);
-    experiment_packet[10] = (char)(((unsigned long)experiment_idx & 0x00ff0000UL) >> 16);
-    experiment_packet[11] = (char)(((unsigned long)experiment_idx & 0x0000ff00UL) >> 8); 
-    experiment_packet[12] = (char)(((unsigned long)experiment_idx & 0x000000ffUL)     );
+    experiment_packet[9]  = (char)(((unsigned long)experiment_idx & 0xFF000000UL) >> 24);
+    experiment_packet[10] = (char)(((unsigned long)experiment_idx & 0x00FF0000UL) >> 16);
+    experiment_packet[11] = (char)(((unsigned long)experiment_idx & 0x0000FF00UL) >> 8); 
+    experiment_packet[12] = (char)(((unsigned long)experiment_idx & 0x000000FFUL)     );
   } else {
     experiment_packet[9]  = 0x00; 
     experiment_packet[10] = 0x00;
