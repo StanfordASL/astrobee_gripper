@@ -145,6 +145,12 @@ void ProcessData() {
         case ADDRESS_DISABLE_AUTO:
           DisableAuto();
           break;
+        // case ADDRESS_ENABLE_DELAY: 
+        //   EnableAstronautDelay(); 
+        //   break;
+        // case ADDRESS_DISABLE_DELAY: 
+        //   DisableAstronautDelay(); 
+        //   break;
         case ADDRESS_OPEN_EXPERIMENT:
           OpenExperiment();
           break;

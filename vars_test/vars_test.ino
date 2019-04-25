@@ -49,10 +49,16 @@ size_t packet_len;
 size_t ndx;
 
 const size_t fixed_packet_len = 7; 
-const int num_chars = 30;
+const int num_chars = 64;
 const size_t hdr_size = 5;
 unsigned char received_packet[num_chars];
 unsigned char hdr_buffer[hdr_size];
 
 uint16_t experiment_idx;
 uint16_t record_num;
+
+const size_t read_status_rx_packet_len = 13;
+unsigned char read_status_rx_packet[read_status_rx_packet_len];
+
+const size_t read_exp_idx_rx_packet_len = 13;
+unsigned char read_exp_idx_rx_packet[read_exp_idx_rx_packet_len];

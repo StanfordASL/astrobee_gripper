@@ -9,6 +9,8 @@ void setup() {
   new_data = false;
   packet_len = fixed_packet_len;
   ndx = 5;
+
+  new_data = false;
 }
 
 void loop() {
@@ -16,7 +18,9 @@ void loop() {
 
   switch (Serial.read()) {
     case 109:  // 'm'
-      experiment_idx = 17;
+      if (Serial.available()) {
+        experiment_idx = uint16_t(Serial.read());
+      }
       SendMarkExperimentPacket();
       Serial.println("Mark has been sent");
       break;
@@ -24,10 +28,6 @@ void loop() {
     case 99: // 'c'
       SendCloseExperimentPacket();
       Serial.println("Close experiment sent");
-      break;
-
-    case 114: // 'r'
-      SendReadPacket();
       break;
 
     case 111: // 'o'
@@ -49,31 +49,34 @@ void loop() {
       SendAutomaticEnablePacket();
       Serial.println("Automatic Enable sent");
       break;
-  }
 
-  //  SendPingPacket();
-  //   SendReadPacket();
-  //   SendWritePacket();
-  //   SendChecksumPacket();
-  //  SendOpenPacket();
-  //  delay(1500);
-  //  SendClosePacket();
-  //  Serial.println("The packet has been sent!");
+    case 115: // 's'
+      ConstructStatusReadRxPacket(read_status_rx_packet);
+      SendStatusReadPacket();
+      Serial.println("Status read packet sent");
+      break;
+
+    case 120: // 'x'
+      ConstructExpIdxReadRxPacket(read_exp_idx_rx_packet);
+      SendExpIdxReadPacket();
+      Serial.println("Experiment index read packet sent");
+      break;
+  }
 
   IncomingData();
   if (new_data) {
     Serial.print("packet_len: ");
     Serial.println(packet_len);
-    for (size_t k = 0; k < packet_len; k++) {
-      Serial.print(char(received_packet[k]));
+
+    if (packet_len != read_status_rx_packet_len) {
+      Serial.println("Received packet does not match expected length!");
+    } else {
+      for (size_t k = 0; k < packet_len; k++) {
+        if (read_status_rx_packet[k] != received_packet[k]) {
+          Serial.println("Packets don't match!");
+          break;
+        }
+      }
     }
-    Serial.println();
-    //    bool packet_valid = VerifyChecksumRxPacket();
-    //    if (packet_valid) {
-    //      Serial.println("Test passed!");
-    //    } else {
-    //      Serial.println("Test failed!");
-    //    }
   }
-  //  delay(1500);
 }

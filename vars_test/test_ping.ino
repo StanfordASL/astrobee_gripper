@@ -6,7 +6,7 @@ void ConstructPingRxPacket(unsigned char* ping_rx_packet) {
   ping_rx_packet[1] = 0xff;
   ping_rx_packet[2] = 0xfd;
   ping_rx_packet[3] = 0x00;
-  ping_rx_packet[4] = TARGET_GRIPPER; 
+  ping_rx_packet[4] = TARGET_GRIPPER;
   ping_rx_packet[5] = LowByte(ping_rx_packet_len - fixed_packet_len);
   ping_rx_packet[6] = HighByte(ping_rx_packet_len - fixed_packet_len);
   ping_rx_packet[7] = INSTR_STATUS;

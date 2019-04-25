@@ -19,9 +19,6 @@ void SendOpenPacket() {
   crc_value = update_crc(crc_value, open_tx_packet, open_tx_packet_len - 2);
   open_tx_packet[11] = LowByte(crc_value); 
   open_tx_packet[12] = HighByte(crc_value); 
-  Serial.println(open_tx_packet[9]);
-  Serial.println(open_tx_packet[10]);
-  Serial.println(crc_value);
 
   SendPacket(open_tx_packet, open_tx_packet_len);
 }
@@ -45,9 +42,6 @@ void SendClosePacket() {
   crc_value = update_crc(crc_value, open_tx_packet, open_tx_packet_len - 2);
   open_tx_packet[11] = LowByte(crc_value); 
   open_tx_packet[12] = HighByte(crc_value); 
-  Serial.println(open_tx_packet[9]);
-  Serial.println(open_tx_packet[10]);
-  Serial.println(crc_value);
 
   SendPacket(open_tx_packet, open_tx_packet_len);
 }

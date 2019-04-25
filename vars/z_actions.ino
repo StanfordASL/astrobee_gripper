@@ -64,6 +64,14 @@ void DisableAuto() {
   return;
 }
 
+void EnableAstronautDelay() {
+  add_astronaut_delay = true; 
+}
+
+void DisableAstronautDelay() {
+  add_astronaut_delay = false; 
+}
+
 void ToggleAuto() {
   if (automatic_mode_enable) {
     automatic_mode_enable = false;
@@ -188,7 +196,6 @@ void Automatic() {
     return;
   }
 
-
   if (vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm && !vl_range_first_set) {
     vl_range_first_mm = vl_range_mm;
     vl_range_first_time_ms = millis();
@@ -197,6 +204,9 @@ void Automatic() {
     
     float v_mps = ((float)vl_range_first_mm - (float)vl_range_mm) / (millis() - vl_range_first_time_ms) ;
     float dh_ms = auto_tof_sensor_offset_mm/v_mps;
+    if (add_astronaut_delay) {
+      dh_ms += astronaut_delay_ms; 
+    }
     
     delay(dh_ms+auto_grasp_offset_ms);
     CloseGripper();
