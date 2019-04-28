@@ -1,19 +1,9 @@
 void OpenGripper() {
-  Disengage();
-  delay(50);
-  Unlock();
-  analogWrite(LED2_R, 0);
-  analogWrite(LED2_G, LED_HIGH);
-  analogWrite(LED2_B, 0);
+  gripper_open = true;
 }
 
 void CloseGripper() {
-  Engage();
-  delay(50);
-  Lock();
-  analogWrite(LED2_R, LED_HIGH);
-  analogWrite(LED2_G, 0);
-  analogWrite(LED2_B, 0);
+  gripper_open = false;
 }
 
 void Engage() {
@@ -33,7 +23,7 @@ void Disengage() {
   
   //pulse the realese tendons
   pwm.setPWM(7,0,210);
-  delay(50);
+  delay(20);
   pwm.setPWM(7,0,300);
 
   Serial.println("Disengage");
@@ -55,12 +45,23 @@ void Unlock() {
 
 void EnableAuto() {
   OpenGripper();
+  Disengage();
+  Unlock();
+  analogWrite(LED2_R, 0);
+  analogWrite(LED2_G, LED_HIGH);
+  analogWrite(LED2_B, 0);
+  analogWrite(LED1_R, 0);
+  analogWrite(LED1_G, LED_HIGH);
+  analogWrite(LED1_B, 0);
   automatic_mode_enable = true;
   return;
 }
 
 void DisableAuto() {
   automatic_mode_enable = false;
+  analogWrite(LED1_R, LED_HIGH);
+  analogWrite(LED1_G, 0);
+  analogWrite(LED1_B, 0);
   return;
 }
 
@@ -75,7 +76,7 @@ void DisableAstronautDelay() {
 void ToggleAuto() {
   if (automatic_mode_enable) {
     automatic_mode_enable = false;
-  // TODO(acauligi): if (experiment_in_progress || file_is_open), should something be done?
+    // TODO(acauligi): if (experiment_in_progress || file_is_open), should something be done?
   } else {
     automatic_mode_enable = true;
   }
@@ -196,21 +197,53 @@ void Automatic() {
     return;
   }
 
-  if (vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm && !vl_range_first_set) {
+  if (!vl_range_first_set && !vl_range_second_set && vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm) {
     vl_range_first_mm = vl_range_mm;
     vl_range_first_time_ms = millis();
     vl_range_first_set = true;
-  } else if (vl_range_mm < vl_range_min_mm) {
-    
+  } else if (vl_range_first_set && !vl_range_second_set && vl_range_mm < vl_range_min_mm) {
     float v_mps = ((float)vl_range_first_mm - (float)vl_range_mm) / (millis() - vl_range_first_time_ms) ;
-    float dh_ms = auto_tof_sensor_offset_mm/v_mps;
-    if (add_astronaut_delay) {
-      dh_ms += astronaut_delay_ms; 
-    }
-    
-    delay(dh_ms+auto_grasp_offset_ms);
+    auto_grasp_delay_ms = auto_tof_sensor_offset_mm / v_mps + auto_grasp_write_delay_ms;
+    auto_grasp_action_time_ms = millis();
+    vl_range_second_set = true;
+  } else if (vl_range_first_set && vl_range_second_set && (millis() - auto_grasp_action_time_ms >= auto_grasp_delay_ms)) {
     CloseGripper();
-    DisableAuto();
-    vl_range_first_set = false;
+  }
+}
+
+void UpdateGripper() {
+  if (!automatic_mode_enable) {
+    return;
+  }
+
+  if (gripper_open) {
+    // open path
+    if (adhesive_engage) {
+      Disengage();
+      adhesive_engage_action_time_ms = millis();
+    } else if (wrist_lock && (millis() - adhesive_engage_action_time_ms >= lock_action_delay_ms)) {
+      Unlock();
+      analogWrite(LED2_R, 0);
+      analogWrite(LED2_G, LED_HIGH);
+      analogWrite(LED2_B, 0);
+    }
+  } else {
+    // close path
+    if (!adhesive_engage) {
+      Engage();
+      adhesive_engage_action_time_ms = millis();
+    } else if (!wrist_lock && millis() - adhesive_engage_action_time_ms >= lock_action_delay_ms) {
+      Lock();
+
+      // TODO(acauligi): find possible clean implementation of this
+      if (vl_range_first_set && vl_range_second_set) {
+        DisableAuto();
+        vl_range_first_set = false;
+        vl_range_second_set = false;
+      }
+      analogWrite(LED2_R, LED_HIGH);
+      analogWrite(LED2_G, 0);
+      analogWrite(LED2_B, 0);
+    }
   }
 }

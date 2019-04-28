@@ -55,8 +55,8 @@ void IncomingData() {
 
         if (packet_len > num_chars) {
           // Not enough space allocated in received_packet to read packet
-          Serial.print("Discarding packet as length exceeds maximum length of ");
-          Serial.println(num_chars);
+          // Serial.print("Discarding packet as length exceeds maximum length of ");
+          // Serial.println(num_chars);
           ResetState();
         }
       } else if (ndx == 7 && received_packet[7] == INSTR_WRITE) {
@@ -205,21 +205,22 @@ bool ReadToF() {
 
 void MeasureCurrentSensors() {
   // Take current sensor measurements
-  current_mA_A = ina219_A.getCurrent_mA();
-  current_mA_B = ina219_B.getCurrent_mA();
-  current_mA_C = ina219_C.getCurrent_mA();
-  current_mA_D = ina219_D.getCurrent_mA();
+  current_L1_mA = ina219_L1.getCurrent_mA();
+  current_L2_mA = ina219_L2.getCurrent_mA();
+  current_R_mA = ina219_R.getCurrent_mA();
+  current_W_mA = ina219_W.getCurrent_mA();
 }
 
 void setup() {
-  Serial1.begin(115200);
-  Serial.begin(115200);
+  Serial1.begin(115200);    // RS-485
+  Serial.begin(115200);     // USB
 
   // Default gripper states
   adhesive_engage = false;
   wrist_lock = false;
   automatic_mode_enable = false;
   experiment_in_progress = false;
+  gripper_open = true;
   overtemperature_flag = false;
 
   // Global variables
@@ -250,18 +251,22 @@ void setup() {
   // Initialize the VL6180X
   vl.begin();
 
+  auto_grasp_write_delay_ms = 200;
+  vl_range_first_set = false;
+  vl_range_second_set = false;
+
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
   // you can call a setCalibration function to change this range (see comments).
-  ina219_A.begin();
-  ina219_B.begin();
-  ina219_C.begin();
-  ina219_D.begin();
+  ina219_L1.begin();
+  ina219_L2.begin();
+  ina219_R.begin();
+  ina219_W.begin();
   // To use a slightly lower 32V, 1A range (higher precision on amps):
-  ina219_A.setCalibration_32V_1A();
-  ina219_B.setCalibration_32V_1A();
-  ina219_C.setCalibration_32V_1A();
-  ina219_D.setCalibration_32V_1A();
+  ina219_L1.setCalibration_32V_1A();
+  ina219_L2.setCalibration_32V_1A();
+  ina219_R.setCalibration_32V_1A();
+  ina219_W.setCalibration_32V_1A();
   // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
   //ina219.setCalibration_16V_400mA();
 
@@ -272,7 +277,7 @@ void setup() {
 
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
-  
+
   pinMode(CS, OUTPUT);
   if (!SD.begin(CS)) {
     Serial.println("SD card initialization failed! Trying again...");
@@ -281,7 +286,6 @@ void setup() {
 }
 
 void loop() {
-  // TODO(acauligi): update loop() to run faster to not drop packets
   // MeasureCurrentSensors();
   IncomingData();
   if (new_data) { 

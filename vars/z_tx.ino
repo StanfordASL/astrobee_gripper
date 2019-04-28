@@ -25,9 +25,11 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
 }
 
 void ConstructExperimentRecordLine() {
+  MeasureCurrentSensors();
+
   // TIME: running 16-bit unsigned counter since Teensy power-on
   cur_time_ms = millis();
-  String TIME_s = String(int(cur_time_ms/1000));
+  String TIME_s = String(int(cur_time_ms/1000));      // TODO(acauligi): convert to ms and ensure formatting
   TIME_s.toCharArray((char*)record_line,5);
 
   record_line[5] = ',';
@@ -41,25 +43,25 @@ void ConstructExperimentRecordLine() {
   record_line[9] = ',';
 
   // SRV_L1_CURR
-  String SRV_L1_CURR_mA = String(int(current_mA_A));
+  String SRV_L1_CURR_mA = String(int(current_L1_mA));
   SRV_L1_CURR_mA.toCharArray((char*)record_line+10,4);
 
   record_line[14] = ',';
 
   // SRV_L2_CURR
-  String SRV_L2_CURR_mA = String(int(current_mA_B));
+  String SRV_L2_CURR_mA = String(int(current_L2_mA));
   SRV_L2_CURR_mA.toCharArray((char*)record_line+15,4);
 
   record_line[19] = ',';
 
   // SRV_R_CURR
-  String SRV_R_CURR_mA = String(int(current_mA_C));
+  String SRV_R_CURR_mA = String(int(current_R_mA));
   SRV_R_CURR_mA.toCharArray((char*)record_line+20,4);
 
   record_line[24] = ',';
 
   // SRV_W_CURR
-  String SRV_W_CURR_mA = String(int(current_mA_D));
+  String SRV_W_CURR_mA = String(int(current_W_mA));
   SRV_W_CURR_mA.toCharArray((char*)record_line+25,4);
 
   record_line[29] = ',';

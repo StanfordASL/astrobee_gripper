@@ -60,6 +60,7 @@ bool adhesive_engage;
 bool wrist_lock;
 bool automatic_mode_enable;
 bool experiment_in_progress;
+bool gripper_open;
 bool overtemperature_flag;
 
 // Pin values
@@ -81,6 +82,12 @@ size_t ndx;
 bool send_ack_packet; 
 uint16_t experiment_idx;
 unsigned char err_state; 
+      
+float adhesive_engage_action_time_ms; 
+const float lock_action_delay_ms = 50;
+float auto_grasp_action_time_ms; 
+float auto_grasp_delay_ms; 
+float auto_grasp_write_delay_ms; 
 
 const size_t hdr_const_byte_len = 2;              // HDR = [0xFF, 0xFF, 0xFD] 
 const size_t reserved_const_byte_len = 2;         // RESERVED = [0x00] 
@@ -127,22 +134,23 @@ const float auto_tof_sensor_offset_mm = 10;
 const float auto_grasp_offset_ms = 200;
 uint8_t vl_range_first_mm;
 float vl_range_first_time_ms;
-bool vl_range_first_set = false;
+bool vl_range_first_set;
+bool vl_range_second_set;
 
 const bool astronaut_delay_ms = 5000; 
 bool add_astronaut_delay = false;
 
 // Instantiating INA219 current sensors I2C address
-Adafruit_INA219 ina219_A;
-Adafruit_INA219 ina219_B(0x41);
-Adafruit_INA219 ina219_C(0x44);
-Adafruit_INA219 ina219_D(0x45);
+Adafruit_INA219 ina219_L1;
+Adafruit_INA219 ina219_L2(0x41);
+Adafruit_INA219 ina219_R(0x44);
+Adafruit_INA219 ina219_W(0x45);
 
 // TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
-float current_mA_A;
-float current_mA_B;
-float current_mA_C;
-float current_mA_D;
+float current_L1_mA;
+float current_L2_mA;
+float current_R_mA;
+float current_W_mA;
 
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
   unsigned short i, j;
