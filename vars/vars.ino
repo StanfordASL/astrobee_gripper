@@ -17,8 +17,7 @@ const unsigned char ADDRESS_LOCK = 0x50;
 const unsigned char ADDRESS_UNLOCK = 0x51;
 const unsigned char ADDRESS_ENABLE_AUTO = 0x60;
 const unsigned char ADDRESS_DISABLE_AUTO = 0x61;
-const unsigned char ADDRESS_ENABLE_DELAY = 0x62;
-const unsigned char ADDRESS_DISABLE_DELAY = 0x63;
+const unsigned char ADDRESS_SET_DELAY = 0x62;
 const unsigned char ADDRESS_OPEN_EXPERIMENT = 0x70;
 const unsigned char ADDRESS_NEXT_RECORD = 0x71;
 const unsigned char ADDRESS_SEEK_RECORD = 0x72;
@@ -89,6 +88,10 @@ float auto_grasp_action_time_ms;
 float auto_grasp_delay_ms; 
 float auto_grasp_write_delay_ms; 
 
+const float disengage_action_delay_ms = 20;
+float disengage_action_time_ms;
+bool disengage_pulse_high;
+
 const size_t hdr_const_byte_len = 2;              // HDR = [0xFF, 0xFF, 0xFD] 
 const size_t reserved_const_byte_len = 2;         // RESERVED = [0x00] 
 const size_t id_const_byte_len = 1;               // ID = [TARGET_GRIPPER] 
@@ -138,7 +141,6 @@ bool vl_range_first_set;
 bool vl_range_second_set;
 
 const bool astronaut_delay_ms = 5000; 
-bool add_astronaut_delay = false;
 
 // Instantiating INA219 current sensors I2C address
 Adafruit_INA219 ina219_L1;

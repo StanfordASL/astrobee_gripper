@@ -145,12 +145,9 @@ void ProcessData() {
         case ADDRESS_DISABLE_AUTO:
           DisableAuto();
           break;
-        // case ADDRESS_ENABLE_DELAY: 
-        //   EnableAstronautDelay(); 
-        //   break;
-        // case ADDRESS_DISABLE_DELAY: 
-        //   DisableAstronautDelay(); 
-        //   break;
+        case ADDRESS_SET_DELAY: 
+          SetPerchDelay(); 
+          break;
         case ADDRESS_OPEN_EXPERIMENT:
           OpenExperiment();
           break;
@@ -232,7 +229,7 @@ void setup() {
 
   // Pin to toggle RS-485 between read/write
   pinMode(UART1_DIR, OUTPUT);
-  digitalWrite(2, LOW);
+  digitalWrite(UART1_DIR, LOW);
 
   // Set LED pins
   pinMode(LED1_R, OUTPUT);
@@ -274,6 +271,7 @@ void setup() {
   pwm.begin();
   pwm.setPWMFreq(60);
   delay(10);
+  disengage_pulse_high = false;
 
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
@@ -292,9 +290,10 @@ void loop() {
     ProcessData();
   }
 
- Automatic();
+  Automatic();
+  UpdateGripper();
 
- if (experiment_in_progress) {
+  if (experiment_in_progress) {
    WriteToCard();
- }
+  }
 }
