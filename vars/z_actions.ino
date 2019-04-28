@@ -25,14 +25,6 @@ void Disengage() {
     pwm.setPWM(7,0,210);
     disengage_action_time_ms = millis();
     disengage_pulse_high = true;
-  } else if (disengage_pulse_high && (millis()-disengage_action_time_ms >= disengage_action_delay_ms)) {
-    // delay(20);
-    pwm.setPWM(7,0,300);
-    disengage_pulse_high = false;
-    adhesive_engage = false;
-      analogWrite(LED2_R, 0);
-      analogWrite(LED2_G, 0);
-      analogWrite(LED2_B, LED_HIGH);
   }
   return;
 }

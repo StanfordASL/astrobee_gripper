@@ -121,3 +121,26 @@ void SendAutomaticEnablePacket() {
 
   SendPacket(automatic_enable_tx_packet, automatic_enable_tx_packet_len);
 }
+
+void SendToggleAutoPacket() {
+  unsigned char automatic_enable_tx_packet[automatic_enable_tx_packet_len];
+  automatic_enable_tx_packet[0] = 0xff;
+  automatic_enable_tx_packet[1] = 0xff;
+  automatic_enable_tx_packet[2] = 0xfd;
+  automatic_enable_tx_packet[3] = 0x00;
+  automatic_enable_tx_packet[4] = TARGET_GRIPPER; 
+  automatic_enable_tx_packet[5] = LowByte(automatic_enable_tx_packet_len - fixed_packet_len);
+  automatic_enable_tx_packet[6] = HighByte(automatic_enable_tx_packet_len - fixed_packet_len);
+  automatic_enable_tx_packet[7] = INSTR_WRITE;
+  automatic_enable_tx_packet[8] = LowByte(ADDRESS_TOGGLE_AUTO);
+  automatic_enable_tx_packet[9] = HighByte(ADDRESS_TOGGLE_AUTO);
+
+  automatic_enable_tx_packet[10] = 0x00; // ((unsigned char) ( ( ((unsigned long) IDX) && 0xFF000000UL) >> 24));
+        
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, automatic_enable_tx_packet, automatic_enable_tx_packet_len - 2);
+  automatic_enable_tx_packet[11] = LowByte(crc_value); 
+  automatic_enable_tx_packet[12] = HighByte(crc_value); 
+
+  SendPacket(automatic_enable_tx_packet, automatic_enable_tx_packet_len);
+}

@@ -290,6 +290,13 @@ void loop() {
     ProcessData();
   }
 
+  if (disengage_pulse_high && (millis()-disengage_action_time_ms >= disengage_action_delay_ms)) {
+    // delay(20);
+    pwm.setPWM(7,0,300);
+    disengage_pulse_high = false;
+    adhesive_engage = false;
+  }
+
   Automatic();
   UpdateGripper();
 

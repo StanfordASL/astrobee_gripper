@@ -61,6 +61,11 @@ void loop() {
       SendExpIdxReadPacket();
       Serial.println("Experiment index read packet sent");
       break;
+
+    case 116: // 't'
+      SendToggleAutoPacket();
+      Serial.println("Toggle auto state");
+      break;
   }
 
   IncomingData();
