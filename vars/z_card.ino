@@ -3,7 +3,7 @@ void WriteToCard() {
     // TODO(acauligi): Send error byte?
     return;
   }
-  MeasureCurrentSensors(); 
+
   ConstructExperimentRecordLine(); 
 
   for (size_t k =0; k < record_packet_data_len; k++) {

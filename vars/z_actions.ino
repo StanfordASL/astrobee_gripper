@@ -11,7 +11,6 @@ void Engage() {
   pwm.setPWM(5,0,335);
   pwm.setPWM(6,0,195);
 
-  Serial.println("Engage");
   adhesive_engage = true;
   return;
 }
@@ -27,6 +26,14 @@ void Disengage() {
     disengage_pulse_high = true;
   }
   return;
+}
+
+void DisengagePulseTimer() {
+  if (disengage_pulse_high && (millis()-disengage_action_time_ms >= disengage_action_delay_ms)) {
+    pwm.setPWM(7,0,300);
+    disengage_pulse_high = false;
+    adhesive_engage = false;
+  }
 }
 
 void Lock() {
@@ -64,7 +71,7 @@ void DisableAuto() {
 }
 
 
-void SetPerchDelay() {
+void SetGraspDelay() {
   auto_grasp_write_delay_ms = ToUInt16(received_packet+lead_in_len+3);
 }
 
@@ -80,8 +87,6 @@ void ToggleAuto() {
 
 void Mark() {
   if (experiment_in_progress) {
-    Serial.println("Experiment already in session! Cannot MARK new one.");
-    // TODO(acauligi): Send error byte?
     return;
   }
 
@@ -109,12 +114,8 @@ void Mark() {
 
 void OpenExperiment() {
   if (experiment_in_progress) {
-    Serial.println("Experiment already in session! Cannot Open one.");
-    // TODO(acauligi): Send error byte?
     return;
   } else if (file_is_open) {
-    Serial.println("File already open! Cannot Open one.");
-    // TODO(acauligi): Send error byte?
     return;
   }
 
@@ -153,7 +154,6 @@ void NextRecord() {
     // ReadRecordFromCard();
     // SendExperimentPacket();
   } else {
-    // TODO(acauligi): Send error byte?
   }
   return;
 }
@@ -166,14 +166,12 @@ void SeekRecord() {
   if (file_is_open && !experiment_in_progress) { 
     record_num = ToUInt16(received_packet+lead_in_len+3);
   } else {
-    // TODO(acauligi): Send error byte?
   }
   return;
 }
 
 void CloseExperiment() {
   if(!file_is_open) { 
-    // TODO(acauligi): Send error byte?
     return;
   }
 
@@ -192,16 +190,16 @@ void Automatic() {
     return;
   }
 
-  if (!vl_range_first_set && !vl_range_second_set && vl_range_mm < vl_range_max_mm && vl_range_mm > vl_range_min_mm) {
-    vl_range_first_mm = vl_range_mm;
-    vl_range_first_time_ms = millis();
-    vl_range_first_set = true;
-  } else if (vl_range_first_set && !vl_range_second_set && vl_range_mm < vl_range_min_mm) {
-    float v_mps = ((float)vl_range_first_mm - (float)vl_range_mm) / (millis() - vl_range_first_time_ms) ;
-    auto_grasp_delay_ms = auto_tof_sensor_offset_mm / v_mps + auto_grasp_write_delay_ms;
+  if (!vl_range_first_trigger_set && !vl_range_second_trigger_set && vl_range_mm < vl_range_trigger_max_mm && vl_range_mm > vl_range_trigger_min_mm) {
+    vl_range_first_trigger_range_mm = vl_range_mm;
+    vl_range_first_trigger_time_ms = millis();
+    vl_range_first_trigger_set = true;
+  } else if (vl_range_first_trigger_set && !vl_range_second_trigger_set && vl_range_mm < vl_range_trigger_min_mm) {
+    float v_mps = ((float)vl_range_first_trigger_range_mm - (float)vl_range_mm) / (millis() - vl_range_first_trigger_time_ms) ;
+    auto_grasp_delay_ms = auto_tof_sensor_offset_mm / v_mps + (float)auto_grasp_write_delay_ms;
     auto_grasp_action_time_ms = millis();
-    vl_range_second_set = true;
-  } else if (vl_range_first_set && vl_range_second_set && (millis() - auto_grasp_action_time_ms >= auto_grasp_delay_ms)) {
+    vl_range_second_trigger_set = true;
+  } else if (vl_range_first_trigger_set && vl_range_second_trigger_set && (millis() - auto_grasp_action_time_ms >= auto_grasp_delay_ms)) {
     CloseGripper();
   }
 }
@@ -231,10 +229,10 @@ void UpdateGripper() {
       Lock();
 
       // TODO(acauligi): find possible clean implementation of this
-      if (vl_range_first_set && vl_range_second_set) {
+      if (vl_range_first_trigger_set && vl_range_second_trigger_set) {
         DisableAuto();
-        vl_range_first_set = false;
-        vl_range_second_set = false;
+        vl_range_first_trigger_set = false;
+        vl_range_second_trigger_set = false;
       }
       analogWrite(LED2_R, LED_HIGH);
       analogWrite(LED2_G, 0);

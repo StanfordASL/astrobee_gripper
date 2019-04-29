@@ -31,6 +31,11 @@ void ResetState() {
 
 void IncomingData() {
   char rc;
+  received_packet[0] = 0xFF;
+  received_packet[1] = 0xFF;
+  received_packet[2] = 0xFD;
+  received_packet[3] = 0x00;
+  received_packet[4] = TARGET_GRIPPER;
 
   while ((Serial1.available() > 0) && (new_data == false)) {
     rc = Serial1.read();
@@ -46,7 +51,6 @@ void IncomingData() {
       }
       const_byte_buffer[packet_const_byte_len - 1] = rc;
     } else {
-      for (size_t k = 0; k < packet_const_byte_len; k++) received_packet[k] = const_byte_buffer[k];
       received_packet[ndx] = rc;
 
       if (ndx == 6) {
@@ -67,9 +71,9 @@ void IncomingData() {
         crc_value = update_crc(crc_value, received_packet, packet_len - 2);
 
         if (crc_value == packet_checksum) {
-          Serial.println("Checksum matches!");
+          // Serial.println("Checksum matches!");
         } else {
-          Serial.println("Checksum does not match!");
+          // Serial.println("Checksum does not match!");
           SendErrorPacket(ERR_CRC);
           ResetState();
           break;
@@ -109,6 +113,9 @@ void ProcessData() {
         case EXPERIMENT:
           SendExperimentPacket();
           break;
+        case DELAY: 
+          SendGraspDelayPacket(); 
+          break;
       }
 
       break;
@@ -146,7 +153,7 @@ void ProcessData() {
           DisableAuto();
           break;
         case ADDRESS_SET_DELAY: 
-          SetPerchDelay(); 
+          SetGraspDelay(); 
           break;
         case ADDRESS_OPEN_EXPERIMENT:
           OpenExperiment();
@@ -176,28 +183,12 @@ bool ReadToF() {
 
   vl_range_mm = vl.readRange();
   uint8_t status = vl.readRangeStatus();
-  if  ((status >= VL6180X_ERROR_SYSERR_1) && (status <= VL6180X_ERROR_SYSERR_5)) {
-    // Serial.println("System error");
-  } else if (status == VL6180X_ERROR_ECEFAIL) {
-    // Serial.println("ECE failure");
-  } else if (status == VL6180X_ERROR_NOCONVERGE) {
-    // Serial.println("No convergence");
-  } else if (status == VL6180X_ERROR_RANGEIGNORE) {
-    // Serial.println("Ignoring range");
-  } else if (status == VL6180X_ERROR_SNR) {
-    // Serial.println("Signal/Noise error");
-  } else if (status == VL6180X_ERROR_RAWUFLOW) {
-    // Serial.println("Raw reading underflow");
-  } else if (status == VL6180X_ERROR_RAWOFLOW) {
-    // Serial.println("Raw reading overflow");
-  } else if (status == VL6180X_ERROR_RANGEUFLOW) {
-    // Serial.println("Range reading underflow");
-  } else if (status == VL6180X_ERROR_RANGEOFLOW) {
-    // Serial.println("Range reading overflow");
-  } else {
+  if (status == VL6180X_ERROR_NONE) {
     return true;
+  } else {
+    err_state = ConstructErrorByte(ERR_TOF);
+    return false;
   }
-  return false;
 }
 
 void MeasureCurrentSensors() {
@@ -249,8 +240,8 @@ void setup() {
   vl.begin();
 
   auto_grasp_write_delay_ms = 200;
-  vl_range_first_set = false;
-  vl_range_second_set = false;
+  vl_range_first_trigger_set = false;
+  vl_range_second_trigger_set = false;
 
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
@@ -276,26 +267,21 @@ void setup() {
   //Initialize the wrist lock servo
   wrist_lock_servo.attach(20);
 
+  file_is_open = false;
   pinMode(CS, OUTPUT);
   if (!SD.begin(CS)) {
-    Serial.println("SD card initialization failed! Trying again...");
+    // Serial.println("SD card initialization failed! Trying again...");
     while (1);
   }
 }
 
 void loop() {
-  // MeasureCurrentSensors();
   IncomingData();
   if (new_data) { 
     ProcessData();
   }
 
-  if (disengage_pulse_high && (millis()-disengage_action_time_ms >= disengage_action_delay_ms)) {
-    // delay(20);
-    pwm.setPWM(7,0,300);
-    disengage_pulse_high = false;
-    adhesive_engage = false;
-  }
+  DisengagePulseTimer();
 
   Automatic();
   UpdateGripper();

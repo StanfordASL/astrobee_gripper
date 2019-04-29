@@ -27,6 +27,7 @@ const unsigned char ADDRESS_CLOSE_EXPERIMENT = 0x73;
 const unsigned char STATUS = 0x30;
 const unsigned char RECORD = 0x7A;
 const unsigned char EXPERIMENT = 0x7B;
+const unsigned char DELAY = 0x7C;
 
 // Protocol target constants
 const unsigned char TARGET_PROXIMAL      = 0x00;
@@ -86,7 +87,7 @@ float adhesive_engage_action_time_ms;
 const float lock_action_delay_ms = 50;
 float auto_grasp_action_time_ms; 
 float auto_grasp_delay_ms; 
-float auto_grasp_write_delay_ms; 
+uint16_t auto_grasp_write_delay_ms; 
 
 const float disengage_action_delay_ms = 20;
 float disengage_action_time_ms;
@@ -105,8 +106,9 @@ const size_t min_tx_len = lead_in_len + crc_len + 2;  // [LEAD_IN, INSTR, ERR, (
 const size_t status_packet_data_len = 2;
 const size_t record_packet_data_len = 35;
 const size_t experiment_packet_data_len = 2;
+const size_t grasp_delay_packet_data_len = 2;
 
-const int num_chars = 64;             // TODO(acauligi): max # of bytes?
+const int num_chars = 64;
 unsigned char const_byte_buffer[packet_const_byte_len];
 unsigned char received_packet[num_chars];
 unsigned char record_line[record_packet_data_len];
@@ -117,30 +119,27 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x4A);
 // Instantiate wrist lock servo
 Servo wrist_lock_servo;
 const int wrist_delay = 20;                 //setting wrist lock delay timer
-const int overtemperature_trigger = 45;     // Celsius
 
 // Instantiate objects for SD card r/w
 File my_file;
 uint16_t record_num; 
-bool file_is_open = false;
+bool file_is_open; 
 const int file_open_attempts = 10;
 
 // Instantiate VL6180X distance sensor object
 // sensor measurement range is really 5-100mm, but margin added
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range_mm;
-uint8_t last_vl_range_mm;
-uint8_t last_vl_range_time_ms;
-const uint8_t vl_range_min_mm = 20;
-const uint8_t vl_range_max_mm = 40; 
+
+const uint8_t vl_range_trigger_min_mm = 20;
+const uint8_t vl_range_trigger_max_mm = 40; 
 const float auto_tof_sensor_offset_mm = 10;
 const float auto_grasp_offset_ms = 200;
-uint8_t vl_range_first_mm;
-float vl_range_first_time_ms;
-bool vl_range_first_set;
-bool vl_range_second_set;
 
-const bool astronaut_delay_ms = 5000; 
+uint8_t vl_range_first_trigger_range_mm;
+float vl_range_first_trigger_time_ms;
+bool vl_range_first_trigger_set;
+bool vl_range_second_trigger_set;
 
 // Instantiating INA219 current sensors I2C address
 Adafruit_INA219 ina219_L1;
@@ -148,7 +147,6 @@ Adafruit_INA219 ina219_L2(0x41);
 Adafruit_INA219 ina219_R(0x44);
 Adafruit_INA219 ina219_W(0x45);
 
-// TODO(acauligi): name these servo counters appropriately i.e. Load 1 Servo Current, Release Servo Current, etc.
 float current_L1_mA;
 float current_L2_mA;
 float current_R_mA;

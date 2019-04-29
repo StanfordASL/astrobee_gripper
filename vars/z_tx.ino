@@ -133,11 +133,11 @@ void SendStatusPacket() {
   status_packet[8] = err_state;
 
   // STATUS_H = [TEMP -   -   -   -   -   - EXP]
-  unsigned char STATUS_H = ((char)overtemperature_flag<<7) | (char)experiment_in_progress;
+  unsigned char STATUS_H = (overtemperature_flag<<7) | experiment_in_progress;
   status_packet[9] = STATUS_H;
   
-  // STATUS_L = [- - - - AUTO - WRIST ADH]
-  unsigned char STATUS_L = (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
+  // STATUS_L = [- FILE - - AUTO - WRIST ADH]
+  unsigned char STATUS_L = (file_is_open<<5) | (automatic_mode_enable<<3) | (wrist_lock<<1) | adhesive_engage;
   status_packet[10] = STATUS_L;
 
   unsigned short crc_value = 0;
@@ -202,4 +202,28 @@ void SendExperimentPacket() {
   experiment_packet[experiment_packet_len-1] = HighByte(crc_value);
 
   SendPacket(experiment_packet, experiment_packet_len);
+}
+
+void SendGraspDelayPacket() {
+  size_t grasp_delay_packet_len = min_tx_len + grasp_delay_packet_data_len; 
+  unsigned char grasp_delay_packet[grasp_delay_packet_len];
+  grasp_delay_packet[0] = 0xFF;
+  grasp_delay_packet[1] = 0xFF;
+  grasp_delay_packet[2] = 0xFD;
+  grasp_delay_packet[3] = 0x00;
+  grasp_delay_packet[4] = TARGET_GRIPPER;
+  grasp_delay_packet[5] = LowByte(grasp_delay_packet_len - lead_in_len);
+  grasp_delay_packet[6] = HighByte(grasp_delay_packet_len - lead_in_len);
+  grasp_delay_packet[7] = INSTR_STATUS;
+  grasp_delay_packet[8] = err_state; 
+
+  grasp_delay_packet[9] = HighByte(auto_grasp_write_delay_ms);
+  grasp_delay_packet[10] = LowByte(auto_grasp_write_delay_ms);
+
+  unsigned short crc_value = 0;
+  crc_value = update_crc(crc_value, grasp_delay_packet, grasp_delay_packet_len - 2);
+  grasp_delay_packet[grasp_delay_packet_len-2]   = LowByte(crc_value);
+  grasp_delay_packet[grasp_delay_packet_len-1] = HighByte(crc_value);
+
+  SendPacket(grasp_delay_packet, grasp_delay_packet_len);
 }
