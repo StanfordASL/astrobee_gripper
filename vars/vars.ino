@@ -124,8 +124,10 @@ const int wrist_delay = 20;                 //setting wrist lock delay timer
 // Instantiate objects for SD card r/w
 File my_file;
 uint16_t record_num; 
-bool file_is_open; 
+bool file_is_open;
+unsigned long sd_card_last_write_time_ms; 
 const int file_open_attempts = 10;
+const float sd_card_write_delay_ms = 5;
 
 // Instantiate VL6180X distance sensor object
 // sensor measurement range is really 5-100mm, but margin added

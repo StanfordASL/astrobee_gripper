@@ -50,7 +50,8 @@ void ConstructExperimentRecordLine() {
 }
 
 void WriteToCard() {
-  if(!file_is_open || !experiment_in_progress) {
+  if(!file_is_open || !experiment_in_progress ||
+   ((millis() - sd_card_last_write_time_ms) <= sd_card_write_delay_ms)) {
     // TODO(acauligi): Send error byte?
     return;
   }
@@ -61,6 +62,7 @@ void WriteToCard() {
     my_file.print(char(record_line[k]));
   }
   my_file.print("\r\n");    // TODO(acauligi): double check line ending
+  sd_card_last_write_time_ms = millis();
 }
 
 void ReadRecordFromCard() {
