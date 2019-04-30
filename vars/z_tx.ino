@@ -24,57 +24,6 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
   return ERR_BYTE;
 }
 
-void ConstructExperimentRecordLine() {
-  MeasureCurrentSensors();
-
-  // TIME: running 16-bit unsigned counter since Teensy power-on
-  cur_time_ms = millis();
-  String TIME_s = String(int(cur_time_ms/1000));      // TODO(acauligi): convert to ms and ensure formatting
-  TIME_s.toCharArray((char*)record_line,5);
-
-  record_line[5] = ',';
-
-  record_line[6] = adhesive_engage ? 'E' : 'D';
-
-  record_line[7] = wrist_lock ? 'L' : 'U';
-
-  record_line[8] = automatic_mode_enable ? 'A' : '*';
-
-  record_line[9] = ',';
-
-  // SRV_L1_CURR
-  String SRV_L1_CURR_mA = String(int(current_L1_mA));
-  SRV_L1_CURR_mA.toCharArray((char*)record_line+10,4);
-
-  record_line[14] = ',';
-
-  // SRV_L2_CURR
-  String SRV_L2_CURR_mA = String(int(current_L2_mA));
-  SRV_L2_CURR_mA.toCharArray((char*)record_line+15,4);
-
-  record_line[19] = ',';
-
-  // SRV_R_CURR
-  String SRV_R_CURR_mA = String(int(current_R_mA));
-  SRV_R_CURR_mA.toCharArray((char*)record_line+20,4);
-
-  record_line[24] = ',';
-
-  // SRV_W_CURR
-  String SRV_W_CURR_mA = String(int(current_W_mA));
-  SRV_W_CURR_mA.toCharArray((char*)record_line+25,4);
-
-  record_line[29] = ',';
-
-  // TOF
-  String TOF_mm = String(int(vl_range_mm));
-  TOF_mm.toCharArray((char*)record_line+30,3);
-
-  record_line[33] = ',';
-  
-  record_line[34] = overtemperature_flag ? '*' : '-';
-}
-
 void SendErrorPacket(unsigned char ERR_NUMBER) {
   err_state = ConstructErrorByte(ERR_NUMBER);
 
@@ -161,8 +110,7 @@ void SendRecordPacket() {
   record_packet[7] = INSTR_STATUS;
   record_packet[8] = err_state; 
 
-  // ReadRecordFromCard();
-  ConstructExperimentRecordLine();
+  ReadRecordFromCard();
   for (size_t record_idx = 0; record_idx < record_packet_data_len; record_idx++) {
     record_packet[9+record_idx] = record_line[record_idx];
   }

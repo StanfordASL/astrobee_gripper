@@ -98,8 +98,8 @@ void Mark() {
   experiment_idx = ToUInt16(received_packet+lead_in_len+3);
 
   String fn = String(String(experiment_idx) + ".txt");
-  char file_name[9];      // ____.txt
-  fn.toCharArray(file_name,9);
+  char file_name[10];      // _____.txt
+  fn.toCharArray(file_name,10);
 
   for (int i = 0; i < file_open_attempts; i++) {
     my_file = SD.open(file_name, FILE_WRITE);
@@ -151,9 +151,6 @@ void NextRecord() {
 
   if (file_is_open && !experiment_in_progress) {
     record_num += skip;
-    // ReadRecordFromCard();
-    // SendExperimentPacket();
-  } else {
   }
   return;
 }
@@ -165,7 +162,6 @@ void SeekRecord() {
   
   if (file_is_open && !experiment_in_progress) { 
     record_num = ToUInt16(received_packet+lead_in_len+3);
-  } else {
   }
   return;
 }

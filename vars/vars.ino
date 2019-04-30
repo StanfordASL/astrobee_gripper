@@ -54,6 +54,7 @@ const unsigned char ERR_DATA_LIM         = 0x06;
 const unsigned char ERR_ACCESS           = 0x07;
 // following are custom error commands
 const unsigned char ERR_TOF           = 0x08;
+const unsigned char ERR_SD            = 0x09;
 
 // Gripper states
 bool adhesive_engage;
