@@ -133,7 +133,7 @@ uint16_t record_num;
 bool file_is_open;
 unsigned long sd_card_last_write_time_ms; 
 const int file_open_attempts = 10;
-const uint16_t sd_card_write_delay_ms = 0;
+const uint16_t sd_card_write_delay_ms = 5;
 uint16_t num_file_lines;
 
 // Instantiate VL6180X distance sensor object
