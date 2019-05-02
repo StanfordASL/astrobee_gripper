@@ -105,7 +105,7 @@ void ToggleAuto() {
 }
 
 void Mark() {
-  if (experiment_in_progress) {
+  if (experiment_in_progress || file_is_open) {
     return;
   }
 
