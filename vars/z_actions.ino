@@ -127,6 +127,7 @@ void Mark() {
       return;
     }
   }
+  err_state = ConstructErrorByte(ERR_SD_OPEN);
   return;
 }
 
@@ -156,6 +157,7 @@ void OpenExperiment() {
       return;
     }
   }
+  err_state = ConstructErrorByte(ERR_SD_OPEN);
   return;
 }
 

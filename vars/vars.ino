@@ -58,8 +58,9 @@ const unsigned char ERR_INSTR_WRITE      = 0x09;
 const unsigned char ERR_TOF_INIT         = 0x0A;
 const unsigned char ERR_TOF_READ         = 0x0B;
 const unsigned char ERR_SD_INIT          = 0x0C;
-const unsigned char ERR_SD_WRITE         = 0x0D;
-const unsigned char ERR_SD_READ          = 0x0E;
+const unsigned char ERR_SD_OPEN          = 0x0D;
+const unsigned char ERR_SD_WRITE         = 0x0E;
+const unsigned char ERR_SD_READ          = 0x0F;
 
 // Gripper states
 bool adhesive_engage;

@@ -74,7 +74,8 @@ void IncomingData() {
           // Serial.println("Checksum matches!");
         } else {
           // Serial.println("Checksum does not match!");
-          SendErrorPacket(ERR_CRC);
+          err_state = ConstructErrorByte(ERR_CRC);
+          SendAckPacket();
           ResetState();
           break;
         }
@@ -117,7 +118,8 @@ void ProcessData() {
           SendGraspDelayPacket(); 
           break;
         default:
-          SendErrorPacket(ERR_INSTR_READ);
+          err_state = ConstructErrorByte(ERR_INSTR_READ);
+          SendAckPacket();
           break;
       }
 
@@ -171,14 +173,16 @@ void ProcessData() {
           CloseExperiment();
           break;
         default:
-          SendErrorPacket(ERR_INSTR_WRITE);
+          err_state = ConstructErrorByte(ERR_INSTR_WRITE);
+          SendAckPacket();
           break;
       }
 
       break;
 
     default:
-      SendErrorPacket(ERR_INSTR);
+      err_state = ConstructErrorByte(ERR_INSTR);
+      SendAckPacket();
   }
 
   ResetState();
@@ -253,19 +257,14 @@ void setup() {
   vl_range_second_trigger_set = false;
 
   // Initialize the INA219.
-  // By default the initialization will use the largest range (32V, 2A).  However
-  // you can call a setCalibration function to change this range (see comments).
   ina219_L1.begin();
   ina219_L2.begin();
   ina219_R.begin();
   ina219_W.begin();
-  // To use a slightly lower 32V, 1A range (higher precision on amps):
   ina219_L1.setCalibration_32V_1A();
   ina219_L2.setCalibration_32V_1A();
   ina219_R.setCalibration_32V_1A();
   ina219_W.setCalibration_32V_1A();
-  // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
-  //ina219.setCalibration_16V_400mA();
 
   //initializing the PWMServoDriver
   pwm.begin();
@@ -279,7 +278,6 @@ void setup() {
   file_is_open = false;
   pinMode(CS, OUTPUT);
   if (!SD.begin(CS)) {
-    // Serial.println("SD card initialization failed! Trying again...");
     err_state = ConstructErrorByte(ERR_SD_INIT);
   }
 }
@@ -294,6 +292,11 @@ void loop() {
 
   Automatic();
   UpdateGripper();
+
+  IncomingData();
+  if (new_data) { 
+    ProcessData();
+  }
 
   if (experiment_in_progress) {
    WriteToCard();

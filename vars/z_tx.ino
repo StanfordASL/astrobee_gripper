@@ -27,29 +27,6 @@ unsigned char ConstructErrorByte(char ERR_NUMBER) {
   return ERR_BYTE;
 }
 
-void SendErrorPacket(unsigned char ERR_NUMBER) {
-  err_state = ConstructErrorByte(ERR_NUMBER);
-
-  size_t err_packet_len = min_tx_len;
-  unsigned char err_packet[err_packet_len];
-  err_packet[0] = 0xFF;
-  err_packet[1] = 0xFF;
-  err_packet[2] = 0xFD;
-  err_packet[3] = 0x00;
-  err_packet[4] = TARGET_GRIPPER;
-  err_packet[5] = LowByte(err_packet_len - lead_in_len);
-  err_packet[6] = HighByte(err_packet_len - lead_in_len);
-  err_packet[7] = INSTR_STATUS;
-  err_packet[8] = err_state; 
-
-  unsigned short crc_value = 0;
-  crc_value = update_crc(crc_value, err_packet, err_packet_len - 2);
-  err_packet[err_packet_len-2] = LowByte(crc_value);
-  err_packet[err_packet_len-1] = HighByte(crc_value);
-
-  SendPacket(err_packet, err_packet_len);
-}
-
 void SendAckPacket() {
   size_t ping_packet_len = min_tx_len; 
   unsigned char ping_packet[ping_packet_len];
