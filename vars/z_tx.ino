@@ -17,6 +17,9 @@ void SendPacket(unsigned char* packet, size_t len) {
   // Set RS485 direction to INPUT
   digitalWrite(UART1_DIR, LOW);
   delayMicroseconds(5);
+
+  // Clear err_state
+  err_state = 0x00;
 }
 
 unsigned char ConstructErrorByte(char ERR_NUMBER) {

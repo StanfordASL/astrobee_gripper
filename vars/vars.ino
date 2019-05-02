@@ -53,8 +53,13 @@ const unsigned char ERR_DATA_LEN         = 0x05;
 const unsigned char ERR_DATA_LIM         = 0x06;
 const unsigned char ERR_ACCESS           = 0x07;
 // following are custom error commands
-const unsigned char ERR_TOF           = 0x08;
-const unsigned char ERR_SD            = 0x09;
+const unsigned char ERR_INSTR_READ       = 0x08; 
+const unsigned char ERR_INSTR_WRITE      = 0x09;
+const unsigned char ERR_TOF_INIT         = 0x0A;
+const unsigned char ERR_TOF_READ         = 0x0B;
+const unsigned char ERR_SD_INIT          = 0x0C;
+const unsigned char ERR_SD_WRITE         = 0x0D;
+const unsigned char ERR_SD_READ          = 0x0E;
 
 // Gripper states
 bool adhesive_engage;
@@ -84,14 +89,14 @@ bool send_ack_packet;
 uint16_t experiment_idx;
 unsigned char err_state; 
       
-float adhesive_engage_action_time_ms; 
-const float lock_action_delay_ms = 50;
-float auto_grasp_action_time_ms; 
-float auto_grasp_delay_ms; 
+unsigned long adhesive_engage_action_time_ms; 
+const uint16_t lock_action_delay_ms = 50;
+unsigned long auto_grasp_action_time_ms; 
+unsigned long auto_grasp_delay_ms; 
 uint16_t auto_grasp_write_delay_ms; 
 
-const float disengage_action_delay_ms = 20;
-float disengage_action_time_ms;
+const uint16_t disengage_action_delay_ms = 20;
+unsigned long disengage_action_time_ms;
 bool disengage_pulse_high;
 
 const size_t hdr_const_byte_len = 2;              // HDR = [0xFF, 0xFF, 0xFD] 
@@ -127,7 +132,8 @@ uint16_t record_num;
 bool file_is_open;
 unsigned long sd_card_last_write_time_ms; 
 const int file_open_attempts = 10;
-const float sd_card_write_delay_ms = 5;
+const uint16_t sd_card_write_delay_ms = 0;
+uint16_t num_file_lines;
 
 // Instantiate VL6180X distance sensor object
 // sensor measurement range is really 5-100mm, but margin added
@@ -137,10 +143,9 @@ uint8_t vl_range_mm;
 const uint8_t vl_range_trigger_min_mm = 20;
 const uint8_t vl_range_trigger_max_mm = 40; 
 const float auto_tof_sensor_offset_mm = 10;
-const float auto_grasp_offset_ms = 200;
 
 uint8_t vl_range_first_trigger_range_mm;
-float vl_range_first_trigger_time_ms;
+unsigned long vl_range_first_trigger_time_ms;
 bool vl_range_first_trigger_set;
 bool vl_range_second_trigger_set;
 

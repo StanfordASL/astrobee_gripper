@@ -11,6 +11,10 @@ void Engage() {
   pwm.setPWM(5,0,335);
   pwm.setPWM(6,0,195);
 
+  analogWrite(LED2_R, 0);
+  analogWrite(LED2_G, LED_HIGH);
+  analogWrite(LED2_B, 0);
+
   adhesive_engage = true;
   return;
 }
@@ -33,6 +37,16 @@ void DisengagePulseTimer() {
     pwm.setPWM(7,0,300);
     disengage_pulse_high = false;
     adhesive_engage = false;
+
+    if (automatic_mode_enable) {
+      analogWrite(LED2_R, 0);
+      analogWrite(LED2_G, 0);
+      analogWrite(LED2_B, LED_HIGH);
+    } else {
+      analogWrite(LED2_R, 0);
+      analogWrite(LED2_G, 0);
+      analogWrite(LED2_B, 0);
+    }
   }
 }
 
@@ -53,20 +67,25 @@ void EnableAuto() {
   Disengage();
   Unlock();
   analogWrite(LED2_R, 0);
-  analogWrite(LED2_G, LED_HIGH);
-  analogWrite(LED2_B, 0);
-  analogWrite(LED1_R, 0);
-  analogWrite(LED1_G, LED_HIGH);
-  analogWrite(LED1_B, 0);
+  analogWrite(LED2_G, 0);
+  analogWrite(LED2_B, LED_HIGH);
   automatic_mode_enable = true;
   return;
 }
 
 void DisableAuto() {
   automatic_mode_enable = false;
-  analogWrite(LED1_R, LED_HIGH);
-  analogWrite(LED1_G, 0);
-  analogWrite(LED1_B, 0);
+
+  if (adhesive_engage) {
+    analogWrite(LED2_R, 0);
+    analogWrite(LED2_G, LED_HIGH);
+    analogWrite(LED2_B, 0);
+  } else {
+    analogWrite(LED2_R, 0);
+    analogWrite(LED2_G, 0);
+    analogWrite(LED2_B, 0);
+  }
+
   return;
 }
 
@@ -133,6 +152,7 @@ void OpenExperiment() {
     if (my_file) {
       file_is_open = true;
       record_num = 0;
+      num_file_lines = my_file.size() / (record_packet_data_len+2);
       return;
     }
   }
@@ -180,8 +200,10 @@ void CloseExperiment() {
 void Automatic() {
   if (!automatic_mode_enable) {
     return;
-  } else if (!ReadToF()) {
-    return;
+  } else if (!vl_range_second_trigger_set) {
+    if (!ReadToF()) {
+      return;
+    }
   }
 
   if (!vl_range_first_trigger_set && !vl_range_second_trigger_set && vl_range_mm < vl_range_trigger_max_mm && vl_range_mm > vl_range_trigger_min_mm) {
@@ -189,8 +211,8 @@ void Automatic() {
     vl_range_first_trigger_time_ms = millis();
     vl_range_first_trigger_set = true;
   } else if (vl_range_first_trigger_set && !vl_range_second_trigger_set && vl_range_mm < vl_range_trigger_min_mm) {
-    float v_mps = ((float)vl_range_first_trigger_range_mm - (float)vl_range_mm) / (millis() - vl_range_first_trigger_time_ms) ;
-    auto_grasp_delay_ms = auto_tof_sensor_offset_mm / v_mps + (float)auto_grasp_write_delay_ms;
+    float v_mps = ((float)vl_range_first_trigger_range_mm - (float)vl_range_mm) / ((float)(millis()) - (float)vl_range_first_trigger_time_ms) ;
+    auto_grasp_delay_ms = (unsigned long)(auto_tof_sensor_offset_mm / v_mps + (float)auto_grasp_write_delay_ms);
     auto_grasp_action_time_ms = millis();
     vl_range_second_trigger_set = true;
   } else if (vl_range_first_trigger_set && vl_range_second_trigger_set && (millis() - auto_grasp_action_time_ms >= auto_grasp_delay_ms)) {
@@ -210,9 +232,6 @@ void UpdateGripper() {
       adhesive_engage_action_time_ms = millis();
     } else if (wrist_lock && (millis() - adhesive_engage_action_time_ms >= lock_action_delay_ms)) {
       Unlock();
-      analogWrite(LED2_R, 0);
-      analogWrite(LED2_G, LED_HIGH);
-      analogWrite(LED2_B, 0);
     }
   } else {
     // close path
@@ -228,9 +247,6 @@ void UpdateGripper() {
         vl_range_first_trigger_set = false;
         vl_range_second_trigger_set = false;
       }
-      analogWrite(LED2_R, LED_HIGH);
-      analogWrite(LED2_G, 0);
-      analogWrite(LED2_B, 0);
     }
   }
 }

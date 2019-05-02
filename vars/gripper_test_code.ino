@@ -116,6 +116,9 @@ void ProcessData() {
         case DELAY: 
           SendGraspDelayPacket(); 
           break;
+        default:
+          SendErrorPacket(ERR_INSTR_READ);
+          break;
       }
 
       break;
@@ -167,6 +170,9 @@ void ProcessData() {
         case ADDRESS_CLOSE_EXPERIMENT:
           CloseExperiment();
           break;
+        default:
+          SendErrorPacket(ERR_INSTR_WRITE);
+          break;
       }
 
       break;
@@ -186,7 +192,7 @@ bool ReadToF() {
   if (status == VL6180X_ERROR_NONE) {
     return true;
   } else {
-    err_state = ConstructErrorByte(ERR_TOF);
+    err_state = ConstructErrorByte(ERR_TOF_READ);
     return false;
   }
 }
@@ -229,15 +235,18 @@ void setup() {
   pinMode(LED2_R, OUTPUT);
   pinMode(LED2_G, OUTPUT);
   pinMode(LED2_B, OUTPUT);
-  analogWrite(LED1_R, LED_HIGH);
+  analogWrite(LED1_R, 0);
   analogWrite(LED1_G, LED_HIGH);
-  analogWrite(LED1_B, LED_HIGH);
-  analogWrite(LED2_R, LED_HIGH);
-  analogWrite(LED2_G, LED_HIGH);
-  analogWrite(LED2_B, LED_HIGH);
+  analogWrite(LED1_B, 0);
+  analogWrite(LED2_R, 0);
+  analogWrite(LED2_G, 0);
+  analogWrite(LED2_B, 0);
   
   // Initialize the VL6180X
-  vl.begin();
+  if (!vl.begin()) {
+    // Set error byte
+    err_state = ConstructErrorByte(ERR_TOF_INIT);
+  }
 
   auto_grasp_write_delay_ms = 200;
   vl_range_first_trigger_set = false;
@@ -271,7 +280,7 @@ void setup() {
   pinMode(CS, OUTPUT);
   if (!SD.begin(CS)) {
     // Serial.println("SD card initialization failed! Trying again...");
-    while (1);
+    err_state = ConstructErrorByte(ERR_SD_INIT);
   }
 }
 
