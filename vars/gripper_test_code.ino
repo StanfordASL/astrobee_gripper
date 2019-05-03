@@ -208,11 +208,39 @@ void ReadToF() {
 }
 
 void MeasureCurrentSensors() {
-  // Take current sensor measurements
-  current_L1_mA = ina219_L1.getCurrent_mA();
-  current_L2_mA = ina219_L2.getCurrent_mA();
-  current_R_mA = ina219_R.getCurrent_mA();
-  current_W_mA = ina219_W.getCurrent_mA();
+  if (INA219_in_progress && current_poll_time_micros - micros() >= current_poll_delay_micros) {
+    if (current_sensor_idx == 0) {
+      // ina219_L1
+      current_L1_mA = ina219_L1.getCurrentRequestI2C();
+    } else if (current_sensor_idx == 1) {
+      // ina219_L2
+      current_L2_mA = ina219_L2.getCurrentRequestI2C();
+    } else if (current_sensor_idx == 2) {
+      // ina219_R
+      current_R_mA = ina219_R.getCurrentRequestI2C();
+    } else if (current_sensor_idx == 3) {
+      // ina219_W
+      current_W_mA = ina219_W.getCurrentRequestI2C();
+    }
+    current_sensor_idx = (current_sensor_idx + 1) % 4;
+    INA219_in_progress = false;
+  } else {
+    if (current_sensor_idx == 0) {
+      // ina219_L1
+      ina219_L1.getCurrentBeginI2C();
+    } else if (current_sensor_idx == 1) {
+      // ina219_L2
+      ina219_L2.getCurrentBeginI2C();
+    } else if (current_sensor_idx == 2) {
+      // ina219_R
+      ina219_R.getCurrentBeginI2C();
+    } else if (current_sensor_idx == 3) {
+      // ina219_W
+      ina219_W.getCurrentBeginI2C();
+    }
+    current_poll_time_micros = micros();
+    INA219_in_progress = true;
+   } 
 }
 
 void setup() {
@@ -273,6 +301,9 @@ void setup() {
   ina219_L2.setCalibration_32V_1A();
   ina219_R.setCalibration_32V_1A();
   ina219_W.setCalibration_32V_1A();
+  current_poll_time_micros = micros();
+  current_sensor_idx = 0;
+  INA219_in_progress = false;
 
   //initializing the PWMServoDriver
   pwm.begin();
@@ -289,7 +320,7 @@ void setup() {
     err_state = ConstructErrorByte(ERR_SD_INIT);
   }
 
-//  Wire.setClock(400000L);
+  Wire.setClock(400000L);
 }
 
 void loop() {
@@ -298,8 +329,10 @@ void loop() {
     ProcessData();
   }
 
-  DisengagePulseTimer();
   ReadToF();
+  MeasureCurrentSensors();
+
+  DisengagePulseTimer();
 
   Automatic();
   UpdateGripper();

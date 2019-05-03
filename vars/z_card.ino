@@ -6,7 +6,6 @@ void ClearExperimentRecordLine() {
 
 void ConstructExperimentRecordLine() {
   ClearExperimentRecordLine();
-  MeasureCurrentSensors();
 
   // TIME: running 16-bit unsigned counter since Teensy power-on
   cur_time_ms = millis();

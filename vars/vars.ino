@@ -1,10 +1,10 @@
 #include <Wire.h>
 #include <Servo.h>
-#include <Adafruit_INA219.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <SPI.h>
 #include <SD.h>
 #include "Stanford_Adafruit_VL6180X.h"
+#include "Stanford_Adafruit_INA219.h"
 
 // Command addresses
 const unsigned char ADDRESS_TOGGLE_AUTO = 0x33;
@@ -158,10 +158,14 @@ Adafruit_INA219 ina219_L2(0x41);
 Adafruit_INA219 ina219_R(0x44);
 Adafruit_INA219 ina219_W(0x45);
 
-float current_L1_mA;
-float current_L2_mA;
-float current_R_mA;
-float current_W_mA;
+uint16_t current_L1_mA;
+uint16_t current_L2_mA;
+uint16_t current_R_mA;
+uint16_t current_W_mA;
+const uint16_t current_poll_delay_micros = 650;
+unsigned long current_poll_time_micros;
+uint8_t current_sensor_idx;
+bool INA219_in_progress;
 
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size) {
   unsigned short i, j;
