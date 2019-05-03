@@ -16,11 +16,16 @@ uint32_t ToUInt32(unsigned char* ptr) {
   return new_value;
 }
 
+unsigned char ConstructErrorByte(char ERR_NUMBER) {
+  unsigned char ERR_BYTE = (0x01 << 7) | ERR_NUMBER;
+  return ERR_BYTE;
+}
+
 // Reset state of received_packet
 void ResetState() {
   // TODO(acauligi): update with all new variables that have been created
   new_data = false;
-
+  
   memset(received_packet, 0, sizeof(received_packet));
   memset(const_byte_buffer, 0, sizeof(const_byte_buffer));
 
@@ -58,9 +63,6 @@ void IncomingData() {
         packet_len += len;
 
         if (packet_len > num_chars) {
-          // Not enough space allocated in received_packet to read packet
-          // Serial.print("Discarding packet as length exceeds maximum length of ");
-          // Serial.println(num_chars);
           ResetState();
         }
       } else if (ndx == 7 && received_packet[7] == INSTR_WRITE) {
@@ -71,9 +73,7 @@ void IncomingData() {
         crc_value = update_crc(crc_value, received_packet, packet_len - 2);
 
         if (crc_value == packet_checksum) {
-          // Serial.println("Checksum matches!");
         } else {
-          // Serial.println("Checksum does not match!");
           err_state = ConstructErrorByte(ERR_CRC);
           SendAckPacket();
           ResetState();
@@ -188,17 +188,23 @@ void ProcessData() {
   ResetState();
 }
 
-bool ReadToF() {
+void ReadToF() {
   // See: https://github.com/adafruit/Adafruit_VL6180X/tree/master/examples/vl6180x
-
-  vl_range_mm = vl.readRange();
-  uint8_t status = vl.readRangeStatus();
-  if (status == VL6180X_ERROR_NONE) {
-    return true;
-  } else {
-    err_state = ConstructErrorByte(ERR_TOF_READ);
-    return false;
-  }
+  if (!range_in_progress && automatic_mode_enable) {
+     range_in_progress = vl.startRange(); 
+   } else {
+     if (vl.rangeAvailable()) {
+       uint8_t local_vl_range_mm = vl.readRange();
+       uint8_t vl_range_status = vl.readRangeStatus();
+       
+       if (vl_range_status != VL6180X_ERROR_NONE) {
+         err_state = ConstructErrorByte(ERR_TOF_READ);
+       }else{
+        vl_range_mm = local_vl_range_mm;
+       }
+       range_in_progress = false;
+     }
+   }
 }
 
 void MeasureCurrentSensors() {
@@ -252,6 +258,8 @@ void setup() {
     err_state = ConstructErrorByte(ERR_TOF_INIT);
   }
 
+  vl_range_mm = vl_range_max_mm;
+  range_in_progress = false;
   auto_grasp_write_delay_ms = 200;
   vl_range_first_trigger_set = false;
   vl_range_second_trigger_set = false;
@@ -280,6 +288,8 @@ void setup() {
   if (!SD.begin(CS)) {
     err_state = ConstructErrorByte(ERR_SD_INIT);
   }
+
+//  Wire.setClock(400000L);
 }
 
 void loop() {
@@ -289,6 +299,7 @@ void loop() {
   }
 
   DisengagePulseTimer();
+  ReadToF();
 
   Automatic();
   UpdateGripper();

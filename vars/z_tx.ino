@@ -4,15 +4,13 @@ void SendPacket(unsigned char* packet, size_t len) {
   digitalWrite(UART1_DIR, HIGH);
   delayMicroseconds(5);
 
-  // Serial1.write(packet, len);
   for (size_t k = 0; k < len; k++) {
     Serial1.write(packet[k]);
     delayMicroseconds(2);
   }
   Serial1.flush();
 
-  // delayMicroseconds(1);
-  delay(1);
+  delayMicroseconds(5);
 
   // Set RS485 direction to INPUT
   digitalWrite(UART1_DIR, LOW);
@@ -20,11 +18,6 @@ void SendPacket(unsigned char* packet, size_t len) {
 
   // Clear err_state
   err_state = 0x00;
-}
-
-unsigned char ConstructErrorByte(char ERR_NUMBER) {
-  unsigned char ERR_BYTE = (0x01 << 7) | ERR_NUMBER;
-  return ERR_BYTE;
 }
 
 void SendAckPacket() {

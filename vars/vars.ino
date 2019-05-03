@@ -2,9 +2,9 @@
 #include <Servo.h>
 #include <Adafruit_INA219.h>
 #include <Adafruit_PWMServoDriver.h>
-#include "Adafruit_VL6180X.h"
 #include <SPI.h>
 #include <SD.h>
+#include "Stanford_Adafruit_VL6180X.h"
 
 // Command addresses
 const unsigned char ADDRESS_TOGGLE_AUTO = 0x33;
@@ -140,7 +140,9 @@ uint16_t num_file_lines;
 // sensor measurement range is really 5-100mm, but margin added
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 uint8_t vl_range_mm;
+bool range_in_progress;
 
+const uint8_t vl_range_max_mm = 100;
 const uint8_t vl_range_trigger_min_mm = 20;
 const uint8_t vl_range_trigger_max_mm = 40; 
 const float auto_tof_sensor_offset_mm = 10;

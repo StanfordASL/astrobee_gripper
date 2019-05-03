@@ -8,8 +8,8 @@ void CloseGripper() {
 
 void Engage() {
   // engage the pull tendons
-  pwm.setPWM(5,0,335);
-  pwm.setPWM(6,0,195);
+  pwm.setPWM(5,0,330); //original at 335
+  pwm.setPWM(6,0,200); //original at 195
 
   analogWrite(LED2_R, 0);
   analogWrite(LED2_G, LED_HIGH);
@@ -132,9 +132,7 @@ void Mark() {
 }
 
 void OpenExperiment() {
-  if (experiment_in_progress) {
-    return;
-  } else if (file_is_open) {
+  if (experiment_in_progress || file_is_open) {
     return;
   }
 
@@ -191,8 +189,6 @@ void CloseExperiment() {
     return;
   }
 
-  // TODO(acauligi): assign experiment_idx=0?
-
   my_file.close();
   experiment_in_progress = false;
   file_is_open = false;
@@ -202,11 +198,7 @@ void CloseExperiment() {
 void Automatic() {
   if (!automatic_mode_enable) {
     return;
-  } else if (!vl_range_second_trigger_set) {
-    if (!ReadToF()) {
-      return;
-    }
-  }
+  } 
 
   if (!vl_range_first_trigger_set && !vl_range_second_trigger_set && vl_range_mm < vl_range_trigger_max_mm && vl_range_mm > vl_range_trigger_min_mm) {
     vl_range_first_trigger_range_mm = vl_range_mm;
