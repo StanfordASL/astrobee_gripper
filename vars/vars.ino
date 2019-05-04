@@ -96,7 +96,7 @@ unsigned long auto_grasp_action_time_ms;
 unsigned long auto_grasp_delay_ms; 
 uint16_t auto_grasp_write_delay_ms; 
 
-const uint16_t disengage_action_delay_ms = 20;
+const uint16_t disengage_action_delay_ms = 250; 
 unsigned long disengage_action_time_ms;
 bool disengage_pulse_high;
 

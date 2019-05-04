@@ -321,6 +321,19 @@ void setup() {
   }
 
   Wire.setClock(400000L);
+
+  // Initialize Servos
+  pwm.setPWM(5,0,200);
+  pwm.setPWM(6,0,320);
+  pwm.setPWM(7,0,330);
+  wrist_lock_servo.write(40);
+
+  // Set LED1 to orange if error occurred
+  if (err_state) {
+    analogWrite(LED1_R, LED_HIGH * 255./255.);
+    analogWrite(LED1_G, LED_HIGH * 80./255.);
+    analogWrite(LED1_B, 0);
+  }
 }
 
 void loop() {

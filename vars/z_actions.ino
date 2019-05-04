@@ -8,9 +8,10 @@ void CloseGripper() {
 
 void Engage() {
   // engage the pull tendons
-  pwm.setPWM(5,0,330); //original at 335
-  pwm.setPWM(6,0,200); //original at 195
-
+  pwm.setPWM(5,0,325); // SN001 @ 330  SN002 @ 325
+  pwm.setPWM(6,0,205); // SN001 @ 200  SN002 @ 205
+  pwm.setPWM(7,0,300);
+  
   analogWrite(LED2_R, 0);
   analogWrite(LED2_G, LED_HIGH);
   analogWrite(LED2_B, 0);
