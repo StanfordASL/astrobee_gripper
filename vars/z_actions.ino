@@ -97,10 +97,10 @@ void SetGraspDelay() {
 
 void ToggleAuto() {
   if (automatic_mode_enable) {
-    automatic_mode_enable = false;
+    DisableAuto();
     // TODO(acauligi): if (experiment_in_progress || file_is_open), should something be done?
   } else {
-    automatic_mode_enable = true;
+    EnableAuto(); 
   }
   return;
 }

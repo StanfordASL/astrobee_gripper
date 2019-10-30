@@ -92,6 +92,8 @@ void ReadRecordFromCard() {
     return;
   }
 
+  ClearExperimentRecordLine();
+
   char cr;
   for (size_t k =0; k < record_packet_data_len; k++) {
     if (!my_file.available()) break; 
