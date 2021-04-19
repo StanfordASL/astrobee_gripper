@@ -76,6 +76,8 @@ void EnableAuto() {
 
 void DisableAuto() {
   automatic_mode_enable = false;
+  vl_range_first_trigger_set = false;
+  vl_range_second_trigger_set = false;
 
   if (adhesive_engage) {
     analogWrite(LED2_R, 0);
@@ -239,8 +241,6 @@ void UpdateGripper() {
       // TODO(acauligi): find possible clean implementation of this
       if (vl_range_first_trigger_set && vl_range_second_trigger_set) {
         DisableAuto();
-        vl_range_first_trigger_set = false;
-        vl_range_second_trigger_set = false;
       }
     }
   }
